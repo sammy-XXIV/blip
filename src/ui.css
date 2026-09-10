@@ -18,7 +18,7 @@
   min-height: 100%;
   display: flex;
   flex-direction: column;
-  padding: 14px 22px 16px;
+  padding: 10px 16px 12px;
   background:
     linear-gradient(180deg, #232220 0%, #161513 45%, #0f0e0c 100%),
     repeating-linear-gradient(0deg, #ffffff03 0 3px, #00000012 3px 6px),
@@ -73,7 +73,7 @@
   z-index: 1;
   display: flex;
   justify-content: center;
-  padding: 10px 0 16px;
+  padding: 6px 0 10px;
 }
 /* nameplate badge */
 .wm {
@@ -81,10 +81,10 @@
   display: inline-flex;
   align-items: baseline;
   gap: 1px;
-  padding: 9px 18px;
+  padding: 6px 14px;
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: 26px;
+  font-size: 21px;
   letter-spacing: 0.1em;
   color: var(--amber);
   text-shadow: 0 0 16px #ff6a1f55, 0 2px 0 #7a3a06;
@@ -124,7 +124,7 @@
   position: relative;
   z-index: 1;
   flex: 1;
-  min-height: 210px;
+  min-height: 190px;
   display: flex;
   border-radius: 12px;
   background: radial-gradient(130% 90% at 50% 0%, #0c1626 0%, var(--screen) 72%);
@@ -153,7 +153,7 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  padding: 16px;
+  padding: 12px;
   min-width: 0;
 }
 
@@ -286,7 +286,7 @@
 
 /* ---- in-game ---- */
 .scr-game {
-  gap: 9px;
+  gap: 7px;
 }
 .scr-top {
   display: flex;
@@ -313,7 +313,7 @@
   color: var(--scr-blue-bright);
 }
 .scr-price {
-  font-size: 40px;
+  font-size: 32px;
   font-weight: 700;
   letter-spacing: 0.04em;
   color: var(--scr-white);
@@ -495,14 +495,14 @@
 .deck {
   position: relative;
   z-index: 1;
-  margin-top: 12px;
+  margin-top: 8px;
   display: grid;
   grid-template-columns: 1fr auto;
   grid-template-areas:
     "pads right"
     "hw   hw";
-  gap: 11px;
-  padding: 13px;
+  gap: 8px;
+  padding: 9px;
   border-radius: 14px;
   background:
     repeating-linear-gradient(0deg, #ffffff04 0 2px, #00000014 2px 4px),
@@ -522,29 +522,29 @@
   grid-area: pads;
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 10px;
+  gap: 8px;
 }
 .pad {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 92px;
-  border-radius: 16px;
+  min-height: 68px;
+  border-radius: 14px;
   font-family: var(--font-display);
   background: linear-gradient(180deg, #4c86c4, #2f5f9e 55%, #1d3d68);
   color: #eaf3fe;
-  box-shadow: 0 7px 0 #12294a, 0 10px 16px #000000a0, inset 0 2px 0 #79a8dd;
+  box-shadow: 0 5px 0 #12294a, 0 8px 12px #000000a0, inset 0 2px 0 #79a8dd;
   transition: transform 0.06s ease, box-shadow 0.06s ease, filter 0.1s ease;
 }
 .pad:active {
-  transform: translateY(6px);
+  transform: translateY(4px);
   box-shadow: 0 1px 0 #12294a, inset 0 2px 0 #79a8dd;
 }
 /* colour variants bound by the control bus */
 .pad.c-neutral {
   background: linear-gradient(180deg, #3a4048, #262b31 55%, #171b20);
   color: #cfd8e2;
-  box-shadow: 0 7px 0 #0c0e11, 0 10px 16px #000000a0, inset 0 2px 0 #4a525c;
+  box-shadow: 0 5px 0 #0c0e11, 0 8px 12px #000000a0, inset 0 2px 0 #4a525c;
 }
 .pad.c-neutral:active {
   box-shadow: 0 1px 0 #0c0e11, inset 0 2px 0 #4a525c;
@@ -552,12 +552,12 @@
 .pad.c-amber {
   background: linear-gradient(180deg, var(--amber-bright), var(--amber) 55%, #d97e0e);
   color: #1a1206;
-  box-shadow: 0 7px 0 #8f4e08, 0 10px 16px #000000a0, inset 0 2px 0 #ffe1ab;
+  box-shadow: 0 5px 0 #8f4e08, 0 8px 12px #000000a0, inset 0 2px 0 #ffe1ab;
 }
 .pad.sel {
   background: linear-gradient(180deg, #a6d6ff, #5aa8f0 55%, #2f83cf);
   color: #06233d;
-  box-shadow: 0 7px 0 #1a5c96, 0 0 18px #5aa8f088, inset 0 2px 0 #d3ecff;
+  box-shadow: 0 5px 0 #1a5c96, 0 0 18px #5aa8f088, inset 0 2px 0 #d3ecff;
 }
 .pad.pulse {
   animation: deck-pulse 1s ease-in-out infinite;
@@ -565,10 +565,10 @@
 .pad:disabled {
   background: linear-gradient(180deg, #23262b, #14171b);
   color: var(--ink-faint);
-  box-shadow: 0 6px 0 #0b0d0f, inset 0 2px 0 #2c3036;
+  box-shadow: 0 4px 0 #0b0d0f, inset 0 2px 0 #2c3036;
 }
 .pad-l {
-  font-size: 15px;
+  font-size: 13px;
   font-weight: 700;
   letter-spacing: 0.04em;
 }
@@ -585,29 +585,29 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 10px;
+  gap: 7px;
 }
 .act {
-  width: 66px;
-  min-height: 56px;
-  padding: 6px 4px;
-  border-radius: 13px;
+  width: 56px;
+  min-height: 44px;
+  padding: 5px 3px;
+  border-radius: 12px;
   font-family: var(--font-display);
-  font-size: 11px;
+  font-size: 10px;
   letter-spacing: 0.04em;
   background: linear-gradient(180deg, var(--amber-bright), var(--amber) 55%, #d97e0e);
   color: #1a1206;
-  box-shadow: 0 6px 0 #8f4e08, 0 8px 14px #000000a0, inset 0 1px 0 #ffe1ab;
+  box-shadow: 0 4px 0 #8f4e08, 0 6px 10px #000000a0, inset 0 1px 0 #ffe1ab;
   transition: transform 0.06s ease, box-shadow 0.06s ease;
 }
 .act:active {
-  transform: translateY(5px);
+  transform: translateY(4px);
   box-shadow: 0 1px 0 #8f4e08, inset 0 1px 0 #ffe1ab;
 }
 .act:disabled {
   background: linear-gradient(180deg, #23262b, #14171b);
   color: var(--ink-faint);
-  box-shadow: 0 5px 0 #0b0d0f;
+  box-shadow: 0 3px 0 #0b0d0f;
 }
 .act.pulse {
   animation: deck-pulse 1s ease-in-out infinite;
@@ -633,8 +633,8 @@
 }
 .wheel-face-box {
   position: relative;
-  width: 62px;
-  height: 108px;
+  width: 52px;
+  height: 84px;
   border-radius: 11px;
   background: linear-gradient(90deg, #0a0908 0%, #34322a 20%, #1a1915 50%, #34322a 80%, #0a0908 100%);
   box-shadow: inset 0 0 0 2px #050504, inset 0 4px 8px #000, 0 2px 4px #000000aa;
@@ -701,15 +701,15 @@
   grid-area: hw;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
 }
 .hwbtn {
-  padding: 7px 14px;
-  border-radius: 20px;
+  padding: 5px 10px;
+  border-radius: 16px;
   background: linear-gradient(180deg, #201f1b, #121110);
   color: var(--scr-blue-dim);
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 9px;
   font-weight: 700;
   letter-spacing: 0.14em;
   box-shadow: 0 3px 0 #050504, inset 0 1px 0 #33322c;
@@ -719,15 +719,15 @@
   box-shadow: inset 0 1px 0 #33322c;
 }
 .hwbtn-help {
-  padding: 7px 11px;
+  padding: 5px 8px;
 }
 .hwchip {
   margin-left: auto;
-  padding: 5px 12px;
+  padding: 4px 9px;
   border-radius: 6px;
   background: #0b0a08;
   border: 2px solid var(--line);
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 700;
   color: var(--scr-white);
   box-shadow: inset 0 2px 5px #000;
