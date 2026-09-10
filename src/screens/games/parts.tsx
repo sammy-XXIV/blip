@@ -29,27 +29,3 @@ export function CountdownRing({ frac, label, size = 60 }: RingProps) {
     </div>
   );
 }
-
-interface SwingProps {
-  /** signed, roughly -1..1 — how far toward a win (up = positive) */
-  lean: number;
-  live: boolean;
-}
-
-/** a tug-of-war bar: fill leans UP (blue, top) or DOWN (bottom) */
-export function SwingMeter({ lean, live }: SwingProps) {
-  const clamped = Math.max(-1, Math.min(1, lean));
-  const pct = 50 - clamped * 50; // 0 = all up, 100 = all down
-  const dir = clamped >= 0 ? "up" : "down";
-  return (
-    <div className={`swing ${live ? "live" : ""}`}>
-      <span className="swing-end up">▲</span>
-      <div className="swing-track">
-        <span className="swing-fill up" style={{ height: `${100 - pct}%` }} />
-        <span className="swing-fill down" style={{ height: `${pct}%` }} />
-        <span className={`swing-knob ${dir}`} style={{ top: `${pct}%` }} />
-      </div>
-      <span className="swing-end down">▼</span>
-    </div>
-  );
-}

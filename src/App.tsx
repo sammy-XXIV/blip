@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { useGame } from "./game/store";
 import { BootScreen } from "./screens/BootScreen";
+import { AuthScreen } from "./screens/AuthScreen";
 import { SelectScreen } from "./screens/SelectScreen";
 import { GameScreen } from "./screens/GameScreen";
 import { Deck } from "./components/Deck";
@@ -36,6 +37,7 @@ export function App() {
 
         <div className="glass">
           {screen === "boot" && <BootScreen />}
+          {screen === "auth" && <AuthScreen />}
           {screen === "select" && <SelectScreen />}
           {screen === "play" && <GameScreen />}
           {screen === "play" && howtoOpen && <HowtoOverlay />}

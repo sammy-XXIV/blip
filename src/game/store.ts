@@ -16,7 +16,7 @@ const clamp = (n: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, n
 
 const TRAIL_LEN = 160;
 
-export type Screen = "boot" | "select" | "play";
+export type Screen = "boot" | "auth" | "select" | "play";
 
 export interface ResultToast {
   roundId: string;
@@ -64,6 +64,7 @@ interface GameState {
 
   boot: () => void;
   enterSelect: () => void;
+  enterAuth: () => void;
   moveSelect: (dir: 1 | -1) => void;
   pickGame: () => void;
   backToSelect: () => void;
@@ -173,6 +174,7 @@ export const useGame = create<GameState>((set, get) => ({
   },
 
   enterSelect: () => set({ screen: "select", menuOpen: false }),
+  enterAuth: () => set({ screen: "auth", menuOpen: false }),
 
   moveSelect: (dir) =>
     set((s) => ({ selectIdx: (s.selectIdx + dir + GAMES.length) % GAMES.length })),

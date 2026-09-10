@@ -1,14 +1,17 @@
+import { useMemo } from "react";
 import { useGame } from "../../game/store";
 import { useControls } from "../../game/controls";
 import { useNow } from "../../hooks/useNow";
-import { fmtPrice, fmtSigned } from "../../game/format";
+import { fmtClock, fmtPrice } from "../../game/format";
+import { Rolling } from "../../components/Rolling";
 import { ResultFlash } from "../../components/ResultFlash";
-import { GameHeader, PayLine, useMainButton, useOpenRounds } from "./shared";
+import { CH, CW, GameHeader, buildChart, useMainButton, useOpenRounds } from "./shared";
 import { CountdownRing } from "./parts";
 
 export function MoonshotScreen() {
   const now = useNow(200);
   const price = useGame((s) => s.prices[s.asset]);
+  const trail = useGame((s) => s.trail[s.asset]);
   const aim = useGame((s) => s.aim);
   const pendingDir = useGame((s) => s.pendingDir);
   const stake = useGame((s) => s.stake);
@@ -42,52 +45,71 @@ export function MoonshotScreen() {
   const lead = open[0];
 
   const dir = lead?.direction ?? pendingDir; // UP = LONG, DOWN = SHORT
-  const offset = 0.0008 * (lead?.multiplier ?? aim);
+  const shownMult = lead?.multiplier ?? aim;
+  const offset = 0.0008 * shownMult;
   const strike = lead?.strikePrice ?? price * (dir === "UP" ? 1 + offset : 1 - offset);
   const entry = lead?.entryPrice ?? price;
 
-  const toTargetPct = ((strike - price) / price) * 100;
-  const cleared = dir === "UP" ? price >= strike : price <= strike;
-  const prog = Math.max(0, Math.min(1, (price - entry) / (strike - entry || 1)));
+  const { path, y } = useMemo(() => buildChart(trail, [entry, strike]), [trail, entry, strike]);
+  const entryY = y(entry);
+  const strikeY = y(strike);
+  const onTarget = dir === "UP" ? price >= strike : price <= strike;
   const frac = lead ? Math.max(0, (lead.expiresAt - now) / (lead.expiresAt - lead.openedAt)) : 0;
   const secs = lead ? Math.max(0, Math.ceil((lead.expiresAt - now) / 1000)) : 0;
 
   return (
     <div className="scr scr-game g-shot">
       <GameHeader title="MOONSHOT" />
-      <div className="scr-price mono">{fmtPrice(price)}</div>
 
-      <div className="shot-stage">
-        <div className="shot-gauge" aria-hidden>
-          <span className="shot-strike-tick" />
-          <span className="shot-strike-cap mono">{fmtPrice(strike)}</span>
-          <span
-            className={`shot-rocket ${cleared ? "hit" : ""} ${lead ? "live" : ""} ${dir === "DOWN" ? "flip" : ""}`}
-            style={{ bottom: `${prog * 100}%` }}
-          >
-            ▲
-          </span>
-        </div>
-        <div className="shot-side">
-          <span className={`shot-reach mono ${cleared ? "hit" : ""}`}>
-            {cleared ? "CLEARED" : `${dir === "UP" ? "▲" : "▼"} ${fmtSigned(toTargetPct, 2)}%`}
-          </span>
-          <span className="shot-cap mono">to the line</span>
-          {lead && <CountdownRing frac={frac} label={`${secs}s`} size={54} />}
-        </div>
+      <div className="shot-aim">
+        <span className="shot-aim-x mono">
+          <Rolling value={shownMult} suffix="×" decimals={1} />
+        </span>
+        <span className={`shot-aim-dir ${dir === "UP" ? "up" : "down"}`}>
+          {dir === "UP" ? "LONG" : "SHORT"}
+        </span>
+        <span className={`shot-target mono ${onTarget ? "hit" : ""}`}>
+          {onTarget ? "ON TARGET" : "OFF"}
+        </span>
       </div>
 
-      <PayLine stake={stake} mult={aim} />
+      <div className="scr-price mono">{fmtPrice(price)}</div>
+
+      <div className="chart-wrap">
+        <svg className="scr-chart" viewBox={`0 0 ${CW} ${CH}`} preserveAspectRatio="none" aria-hidden>
+          {entryY !== null && <line x1="0" y1={entryY} x2={CW} y2={entryY} className="scr-entry" />}
+          {strikeY !== null && (
+            <line x1="0" y1={strikeY} x2={CW} y2={strikeY} className="scr-strike" />
+          )}
+          {path && <path d={path} className="scr-line" />}
+        </svg>
+        {lead && (
+          <div className="chart-ring">
+            <CountdownRing frac={frac} label={`${secs}s`} size={48} />
+          </div>
+        )}
+        <span className="chart-tag mono">LINE {fmtPrice(strike)}</span>
+      </div>
+
+      <div className="shot-nums mono">
+        <span>
+          AMOUNT <b>${stake}</b>
+        </span>
+        <span>
+          WIN UP TO <b>${Math.round(stake * shownMult)}</b>
+        </span>
+      </div>
 
       <div className={`scr-status mono ${lead ? "live" : ""}`}>
         {error ? (
           <span className="scr-err">{error}</span>
         ) : lead ? (
           <>
-            {dir === "UP" ? "▲ LONG" : "▼ SHORT"} ${lead.stake} · {cleared ? "clear ✓" : "climbing"}
+            {dir === "UP" ? "▲ LONG" : "▼ SHORT"} · {fmtClock(lead.expiresAt - now)} ·{" "}
+            {onTarget ? "clear ✓" : "not yet"}
           </>
         ) : (
-          `Dial AIM, set ▲ LONG / ▼ SHORT. Clear ${fmtPrice(strike)}.`
+          "Reach further, win bigger. Clear the line."
         )}
       </div>
 

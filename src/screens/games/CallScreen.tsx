@@ -1,18 +1,17 @@
+import { useMemo } from "react";
 import { useGame } from "../../game/store";
 import { useControls } from "../../game/controls";
 import { useNow } from "../../hooks/useNow";
 import { STAKE_MAX, STAKE_MIN, multiplierForStreak } from "../../game/config";
-import { fmtPrice, fmtSigned } from "../../game/format";
+import { fmtClock, fmtPrice, fmtSigned } from "../../game/format";
 import { ResultFlash } from "../../components/ResultFlash";
-import { GameHeader, PayLine, useMainButton, useOpenRounds } from "./shared";
-import { CountdownRing, SwingMeter } from "./parts";
-
-/** 0.35% move = pinned to a side */
-const FULL_SWING = 0.0035;
+import { CH, CW, GameHeader, PayLine, buildChart, useMainButton, useOpenRounds } from "./shared";
+import { CountdownRing } from "./parts";
 
 export function CallScreen() {
   const now = useNow(200);
   const price = useGame((s) => s.prices[s.asset]);
+  const trail = useGame((s) => s.trail[s.asset]);
   const asset = useGame((s) => s.asset);
   const stake = useGame((s) => s.stake);
   const streak = useGame((s) => s.streak);
@@ -53,11 +52,9 @@ export function CallScreen() {
 
   const open = useOpenRounds("call");
   const lead = open[0];
-
-  const movePct = lead ? ((price - lead.entryPrice) / lead.entryPrice) * 100 : 0;
-  // lean toward the player's win: +ve = winning
-  const raw = lead ? (price - lead.entryPrice) / lead.entryPrice / FULL_SWING : 0;
-  const lean = lead ? (lead.direction === "UP" ? raw : -raw) : 0;
+  const { path, y } = useMemo(() => buildChart(trail, [lead?.entryPrice]), [trail, lead?.entryPrice]);
+  const entryY = lead ? y(lead.entryPrice) : null;
+  const movePct = lead ? ((price - lead.entryPrice) / lead.entryPrice) * 100 : null;
   const frac = lead ? Math.max(0, (lead.expiresAt - now) / (lead.expiresAt - lead.openedAt)) : 0;
   const secs = lead ? Math.max(0, Math.ceil((lead.expiresAt - now) / 1000)) : 0;
 
@@ -66,9 +63,16 @@ export function CallScreen() {
       <GameHeader title="CALL" />
       <div className="scr-price mono">{fmtPrice(price)}</div>
 
-      <div className="call-stage">
-        <SwingMeter lean={lean} live={!!lead} />
-        {lead && <CountdownRing frac={frac} label={`${secs}s`} />}
+      <div className="chart-wrap">
+        <svg className="scr-chart" viewBox={`0 0 ${CW} ${CH}`} preserveAspectRatio="none" aria-hidden>
+          {entryY !== null && <line x1="0" y1={entryY} x2={CW} y2={entryY} className="scr-entry" />}
+          {path && <path d={path} className="scr-line" />}
+        </svg>
+        {lead && (
+          <div className="chart-ring">
+            <CountdownRing frac={frac} label={`${secs}s`} size={48} />
+          </div>
+        )}
       </div>
 
       <PayLine stake={stake} mult={multiplierForStreak(streak)} />
@@ -78,10 +82,11 @@ export function CallScreen() {
           <span className="scr-err">{error}</span>
         ) : lead ? (
           <>
-            {lead.direction === "UP" ? "▲" : "▼"} {asset} ${lead.stake}
-            <span className={lean >= 0 ? "up" : "down"}> · {fmtSigned(movePct, 2)}%</span>
+            {lead.direction === "UP" ? "▲" : "▼"} {asset} ${lead.stake} · {fmtClock(lead.expiresAt - now)}
+            {movePct !== null && (
+              <span className={movePct >= 0 ? "up" : "down"}> · {fmtSigned(movePct, 2)}%</span>
+            )}
             {open.length > 1 && <span className="scr-more"> +{open.length - 1}</span>}
-            {lean >= 0 ? " · winning" : " · behind"}
           </>
         ) : (
           "Set ▲ or ▼, then FIRE."

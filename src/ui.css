@@ -841,43 +841,79 @@
 .g-lucky {
   gap: 8px;
 }
-.lucky-stage {
+.sw-stage {
   flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 10px;
-  min-height: 120px;
+  min-height: 132px;
 }
-.coin {
-  width: 96px;
-  height: 96px;
-  border-radius: 50%;
+.sw-box {
+  position: relative;
+  width: 132px;
+  height: 132px;
   display: grid;
   place-items: center;
-  font-size: 40px;
-  font-weight: 700;
-  color: var(--scr-blue-bright);
-  background: radial-gradient(circle at 38% 32%, #16324f, #0a1826 72%);
-  border: 3px solid var(--line-bright);
-  box-shadow: inset 0 2px 6px #000, 0 0 22px #5aa8f024;
 }
-.coin.up {
-  color: var(--scr-blue-bright);
-  border-color: var(--scr-blue);
+.sw-pointer {
+  position: absolute;
+  top: -3px;
+  left: 50%;
+  width: 16px;
+  transform: translateX(-50%);
+  z-index: 3;
 }
-.coin.down {
-  color: #9fb4c9;
+.sw-pointer path {
+  fill: var(--amber);
+  filter: drop-shadow(0 0 5px var(--amber));
 }
-.coin.spin {
-  animation: coin-spin 0.5s linear infinite;
-  color: var(--amber);
+.spinwheel {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 3px var(--line-bright), 0 0 24px #5aa8f022;
 }
-@keyframes coin-spin {
+.sw-rotor {
+  transform-origin: 50% 50%;
+}
+.sw-rotor.idle {
+  animation: sw-idle 24s linear infinite;
+}
+@keyframes sw-idle {
   to {
-    transform: rotateY(360deg);
+    transform: rotate(360deg);
   }
+}
+.wedge {
+  stroke: #050c16;
+  stroke-width: 0.6;
+}
+.wedge.up {
+  fill: #1d4a74;
+}
+.wedge.down {
+  fill: #3a1a12;
+}
+.wedge-lbl {
+  fill: var(--scr-white);
+  font-size: 6px;
+  font-weight: 700;
+  font-family: var(--font-mono, monospace);
+  opacity: 0.85;
+}
+.sw-hub {
+  fill: #0a1826;
+  stroke: var(--line-bright);
+  stroke-width: 1.5;
+}
+.sw-ring {
+  position: absolute;
+  inset: -10px;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
 }
 .lucky-tag {
   font-size: 11px;
@@ -908,94 +944,70 @@
 .g-shot {
   gap: 8px;
 }
-.shot-stage {
-  flex: 1;
-  min-height: 130px;
+.shot-aim {
   display: flex;
-  align-items: stretch;
+  align-items: baseline;
   justify-content: center;
-  gap: 22px;
-  padding: 6px 0;
+  gap: 10px;
+  min-height: 30px;
 }
-.shot-gauge {
-  position: relative;
-  width: 18px;
-  border-radius: 9px;
-  background: linear-gradient(180deg, rgba(255, 157, 30, 0.16) 0%, #0a1826 42%, #050c16 100%);
-  border: 2px solid var(--line);
-  box-shadow: inset 0 2px 6px #000, inset 0 0 12px rgba(90, 168, 240, 0.1);
-}
-.shot-strike-tick {
-  position: absolute;
-  left: -5px;
-  right: -5px;
-  top: 8px;
-  height: 3px;
-  background: var(--amber);
-  box-shadow: 0 0 8px var(--amber);
-}
-.shot-strike-cap {
-  position: absolute;
-  right: 22px;
-  top: 2px;
-  font-size: 10px;
-  color: var(--amber);
-  white-space: nowrap;
-}
-.shot-rocket {
-  position: absolute;
-  left: 50%;
-  transform: translate(-50%, 50%);
-  font-size: 16px;
-  line-height: 1;
-  color: var(--scr-blue-bright);
-  text-shadow: 0 0 10px var(--scr-blue);
-  transition: bottom 0.3s cubic-bezier(0.2, 0.7, 0.3, 1);
-}
-.shot-rocket.flip {
-  rotate: 180deg;
-}
-.shot-rocket.live {
-  animation: rocket-bob 0.9s ease-in-out infinite;
-}
-.shot-rocket.hit {
-  color: var(--amber-bright);
-  text-shadow: 0 0 14px var(--amber);
-}
-@keyframes rocket-bob {
-  50% {
-    filter: drop-shadow(0 0 6px currentColor);
-  }
-}
-.shot-side {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: center;
-  gap: 4px;
-}
-.shot-reach {
-  font-size: 20px;
+.shot-aim-x {
+  font-size: 26px;
   font-weight: 700;
   color: var(--amber);
-  letter-spacing: 0.02em;
+  text-shadow: 0 0 14px #ff9d1e55;
 }
-.shot-reach.hit {
+.shot-aim-dir {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+}
+.shot-aim-dir.up {
   color: var(--scr-blue-bright);
 }
-.shot-cap {
+.shot-aim-dir.down {
+  color: var(--down-bright);
+}
+.shot-target {
   font-size: 10px;
   letter-spacing: 0.14em;
   color: var(--scr-blue-faint);
-  margin-bottom: 6px;
 }
-.shot-line {
-  font-size: 12px;
-  color: var(--scr-blue-dim);
-  letter-spacing: 0.06em;
+.shot-target.hit {
+  color: var(--amber-bright);
 }
-.shot-line b {
+.shot-nums {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  color: var(--scr-blue-faint);
+}
+.shot-nums b {
+  color: var(--scr-white);
+  font-weight: 700;
+}
+
+/* ---- shared: chart with a countdown ring pinned to its corner ---- */
+.chart-wrap {
+  position: relative;
+  width: 100%;
+}
+.chart-ring {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  pointer-events: none;
+}
+.chart-tag {
+  position: absolute;
+  left: 4px;
+  bottom: 2px;
+  font-size: 9px;
+  letter-spacing: 0.1em;
   color: var(--amber);
+  opacity: 0.9;
 }
 
 /* ======================================================================
@@ -1145,99 +1157,6 @@
   color: var(--scr-white);
 }
 
-/* CALL swing meter */
-.call-stage {
-  flex: 1;
-  min-height: 130px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 26px;
-  padding: 6px 0;
-}
-.swing {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-  height: 100%;
-}
-.swing-end {
-  font-size: 13px;
-  color: var(--scr-blue-faint);
-}
-.swing-track {
-  position: relative;
-  flex: 1;
-  width: 20px;
-  border-radius: 10px;
-  background: #050c16;
-  border: 2px solid var(--line);
-  box-shadow: inset 0 2px 6px #000;
-  overflow: hidden;
-}
-.swing-fill {
-  position: absolute;
-  left: 0;
-  right: 0;
-  transition: height 0.3s cubic-bezier(0.2, 0.7, 0.3, 1);
-}
-.swing-fill.up {
-  top: 0;
-  background: linear-gradient(180deg, #5aa8f0, #5aa8f000);
-}
-.swing-fill.down {
-  bottom: 0;
-  background: linear-gradient(0deg, #c8412a, #c8412a00);
-}
-.swing-knob {
-  position: absolute;
-  left: 50%;
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
-  transform: translate(-50%, -50%);
-  background: var(--scr-white);
-  box-shadow: 0 0 10px #fff;
-  transition: top 0.3s cubic-bezier(0.2, 0.7, 0.3, 1);
-}
-.swing.live .swing-knob {
-  animation: knob-pulse 0.9s ease-in-out infinite;
-}
-.swing-knob.up {
-  box-shadow: 0 0 12px #5aa8f0;
-}
-.swing-knob.down {
-  box-shadow: 0 0 12px #ef6a3f;
-}
-@keyframes knob-pulse {
-  50% {
-    transform: translate(-50%, -50%) scale(1.25);
-  }
-}
-
-/* LUCKY coin: ring hugs it, spin harder */
-.coin {
-  position: relative;
-}
-.coin.spin {
-  animation: coin-spin 0.32s linear infinite;
-}
-.coin.landed {
-  animation: coin-land 0.4s cubic-bezier(0.2, 1.4, 0.4, 1);
-}
-@keyframes coin-land {
-  from {
-    transform: rotateY(540deg) scale(0.8);
-  }
-  to {
-    transform: rotateY(0) scale(1);
-  }
-}
-.coin .ring {
-  position: absolute;
-  inset: -12px;
-}
 
 /* screen enters with a quick slide-fade */
 .scr-game,
