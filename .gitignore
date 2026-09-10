@@ -6,3 +6,8 @@ dist
 *.key
 market.json
 _ref
+
+# wrangler files
+.wrangler
+.dev.vars*
+!.dev.vars.example
