@@ -3,7 +3,6 @@ import { markets, type Asset, type Direction, type Round } from "../lib/markets"
 import { sfx } from "../lib/sound";
 import {
   GAMES,
-  MOONSHOT_MULTIPLIER,
   gameById,
   multiplierForStreak,
   STAKE_DEFAULT,
@@ -34,6 +33,8 @@ interface GameState {
   game: GameId;
   selectIdx: number;
   pendingDir: Direction;
+  /** MOONSHOT: target multiplier you're aiming for (further = harder) */
+  aim: number;
 
   asset: Asset;
   stake: number;
@@ -61,6 +62,8 @@ interface GameState {
   setAsset: (a: Asset) => void;
   cycleAsset: (dir: 1 | -1) => void;
   setPending: (d: Direction) => void;
+  setAim: (v: number) => void;
+  setStake: (v: number) => void;
   /** nudge the stake by whole dollars (one scroll unit = 1) */
   nudgeStake: (dollars: number) => void;
   /** fire the current game with the pending choice */
@@ -78,6 +81,7 @@ export const useGame = create<GameState>((set, get) => ({
   game: "call",
   selectIdx: 0,
   pendingDir: "UP",
+  aim: 3,
 
   asset: "BTC",
   stake: STAKE_DEFAULT,
@@ -172,6 +176,8 @@ export const useGame = create<GameState>((set, get) => ({
     }),
 
   setPending: (d) => set({ pendingDir: d }),
+  setAim: (v) => set({ aim: clamp(Math.round(v * 2) / 2, 2, 10) }),
+  setStake: (v) => set({ stake: clamp(Math.round(v), STAKE_MIN, STAKE_MAX) }),
 
   nudgeStake: (dollars) =>
     set((s) => ({ stake: clamp(Math.round(s.stake + dollars), STAKE_MIN, STAKE_MAX) })),
@@ -187,7 +193,7 @@ export const useGame = create<GameState>((set, get) => ({
     const direction: Direction =
       s.game === "lucky" ? (Math.random() < 0.5 ? "UP" : "DOWN") : s.pendingDir;
     const multiplier =
-      s.game === "moonshot" ? MOONSHOT_MULTIPLIER : multiplierForStreak(s.streak);
+      s.game === "moonshot" ? s.aim : multiplierForStreak(s.streak);
 
     set({ placing: true, error: null });
     try {
@@ -199,6 +205,7 @@ export const useGame = create<GameState>((set, get) => ({
         stake: s.stake,
         windowSec: WINDOW_SEC,
         multiplier,
+        aim: s.aim,
       });
     } catch (e) {
       set({ error: e instanceof Error ? e.message : "Could not place round" });

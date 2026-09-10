@@ -1,7 +1,8 @@
 import { useMemo } from "react";
 import { useGame } from "../../game/store";
+import { useControls } from "../../game/controls";
 import { useNow } from "../../hooks/useNow";
-import { multiplierForStreak } from "../../game/config";
+import { STAKE_MAX, STAKE_MIN, multiplierForStreak } from "../../game/config";
 import { fmtClock, fmtPrice, fmtSigned } from "../../game/format";
 import { ResultFlash } from "../../components/ResultFlash";
 import { CH, CW, GameHeader, PayLine, buildChart, useOpenRounds } from "./shared";
@@ -13,7 +14,47 @@ export function CallScreen() {
   const asset = useGame((s) => s.asset);
   const stake = useGame((s) => s.stake);
   const streak = useGame((s) => s.streak);
+  const pendingDir = useGame((s) => s.pendingDir);
+  const placing = useGame((s) => s.placing);
+  const balance = useGame((s) => s.balance);
+  const setPending = useGame((s) => s.setPending);
+  const setStake = useGame((s) => s.setStake);
+  const fire = useGame((s) => s.fire);
   const error = useGame((s) => s.error);
+
+  useControls(
+    {
+      knob: {
+        label: "STAKE",
+        value: stake,
+        min: STAKE_MIN,
+        max: STAKE_MAX,
+        step: 1,
+        onChange: setStake,
+        format: (v) => `$${v}`,
+      },
+      action1: {
+        label: "▲ UP",
+        color: "blue",
+        active: pendingDir === "UP",
+        onPress: () => setPending("UP"),
+      },
+      action2: {
+        label: "▼ DOWN",
+        color: "blue",
+        active: pendingDir === "DOWN",
+        onPress: () => setPending("DOWN"),
+      },
+      main: {
+        label: placing ? "OPENING" : "FIRE",
+        color: "amber",
+        loading: placing,
+        disabled: stake > balance,
+        onPress: () => void fire(),
+      },
+    },
+    [stake, pendingDir, placing, balance],
+  );
 
   const open = useOpenRounds("call");
   const lead = open[0];

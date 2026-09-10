@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { useGame } from "../../game/store";
+import { useControls } from "../../game/controls";
 import { useNow } from "../../hooks/useNow";
-import { MOONSHOT_MULTIPLIER } from "../../game/config";
 import { fmtClock, fmtPrice, fmtSigned } from "../../game/format";
 import { ResultFlash } from "../../components/ResultFlash";
 import { CH, CW, GameHeader, PayLine, buildChart, useOpenRounds } from "./shared";
@@ -10,16 +10,56 @@ export function MoonshotScreen() {
   const now = useNow(200);
   const price = useGame((s) => s.prices[s.asset]);
   const trail = useGame((s) => s.trail[s.asset]);
-  const stake = useGame((s) => s.stake);
+  const aim = useGame((s) => s.aim);
   const pendingDir = useGame((s) => s.pendingDir);
+  const placing = useGame((s) => s.placing);
+  const balance = useGame((s) => s.balance);
+  const stake = useGame((s) => s.stake);
+  const setAim = useGame((s) => s.setAim);
+  const setPending = useGame((s) => s.setPending);
+  const fire = useGame((s) => s.fire);
   const error = useGame((s) => s.error);
+
+  useControls(
+    {
+      knob: {
+        label: "AIM",
+        value: aim,
+        min: 2,
+        max: 10,
+        step: 0.5,
+        onChange: setAim,
+        format: (v) => `${v}×`,
+      },
+      action1: {
+        label: "▲ LONG",
+        color: "blue",
+        active: pendingDir === "UP",
+        onPress: () => setPending("UP"),
+      },
+      action2: {
+        label: "▼ SHORT",
+        color: "blue",
+        active: pendingDir === "DOWN",
+        onPress: () => setPending("DOWN"),
+      },
+      main: {
+        label: placing ? "OPENING" : "FIRE",
+        color: "amber",
+        loading: placing,
+        disabled: stake > balance,
+        onPress: () => void fire(),
+      },
+    },
+    [aim, pendingDir, placing, balance, stake],
+  );
 
   const open = useOpenRounds("moonshot");
   const lead = open[0];
 
   const dir = lead?.direction ?? pendingDir; // UP = LONG, DOWN = SHORT
-  const strike =
-    lead?.strikePrice ?? price * (dir === "UP" ? 1.0015 : 0.9985);
+  const offset = 0.0008 * (lead?.multiplier ?? aim); // matches the demo adapter
+  const strike = lead?.strikePrice ?? price * (dir === "UP" ? 1 + offset : 1 - offset);
   const entry = lead?.entryPrice ?? price;
 
   const { path, y } = useMemo(() => buildChart(trail, [entry, strike]), [trail, entry, strike]);
@@ -63,7 +103,7 @@ export function MoonshotScreen() {
         LINE <b>{fmtPrice(strike)}</b>
       </div>
 
-      <PayLine stake={stake} mult={MOONSHOT_MULTIPLIER} />
+      <PayLine stake={stake} mult={aim} />
 
       <div className={`scr-status mono ${lead ? "live" : ""}`}>
         {error ? (

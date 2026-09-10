@@ -40,6 +40,8 @@ export interface PlaceRoundInput {
   stake: number;
   windowSec: number;
   multiplier: number;
+  /** MOONSHOT: target multiplier — scales how far the strike sits (demo only) */
+  aim?: number;
 }
 
 /**

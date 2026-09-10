@@ -100,16 +100,17 @@ export class DemoMarkets implements MarketsAdapter {
   }
 
   async placeRound(input: PlaceRoundInput): Promise<Round> {
-    const { game, market, asset, direction, stake, windowSec, multiplier } = input;
+    const { game, market, asset, direction, stake, windowSec, multiplier, aim } = input;
     if (stake <= 0) throw new Error("Stake must be positive");
     if (stake > this.balance) throw new Error("Insufficient demo balance");
 
     const now = Date.now();
     const entryPrice = this.prices[asset];
-    // MOONSHOT: a strike ~0.15% away in the called direction — you must clear it.
+    // MOONSHOT: strike sits further out the higher you AIM (0.08% per x).
+    const offset = 0.0008 * (aim ?? 3);
     const strikePrice =
       market === "strike"
-        ? round0(entryPrice * (direction === "UP" ? 1.0015 : 0.9985))
+        ? round0(entryPrice * (direction === "UP" ? 1 + offset : 1 - offset))
         : undefined;
 
     const round: Round = {

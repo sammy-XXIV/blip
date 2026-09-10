@@ -1,107 +1,67 @@
 import { useGame } from "../game/store";
-import { gameById } from "../game/config";
-import { fmtUsd } from "../game/format";
+import { useControlBus, type BtnSpec } from "../game/controls";
 import { sfx } from "../lib/sound";
-import { StakeWheel } from "./StakeWheel";
+import { Knob } from "./Knob";
 
 const buzz = (p: number | number[]) => {
   if (navigator.vibrate) navigator.vibrate(p);
 };
 
+function Pad({ spec, fallback }: { spec: BtnSpec | null | undefined; fallback: string }) {
+  const s = spec ?? { label: fallback, onPress: () => {}, disabled: true };
+  return (
+    <button
+      className={`pad c-${s.color ?? "neutral"} ${s.active ? "sel" : ""} ${s.pulse ? "pulse" : ""}`}
+      disabled={s.disabled}
+      onClick={() => {
+        if (s.disabled) return;
+        buzz(6);
+        sfx("tick");
+        s.onPress();
+      }}
+    >
+      <span className="pad-l">{s.label}</span>
+    </button>
+  );
+}
+
 export function Deck() {
   const screen = useGame((s) => s.screen);
-  const gameId = useGame((s) => s.game);
-  const pendingDir = useGame((s) => s.pendingDir);
-  const stake = useGame((s) => s.stake);
-  const placing = useGame((s) => s.placing);
-  const balance = useGame((s) => s.balance);
-
-  const moveSelect = useGame((s) => s.moveSelect);
-  const pickGame = useGame((s) => s.pickGame);
-  const setPending = useGame((s) => s.setPending);
-  const fire = useGame((s) => s.fire);
   const goHome = useGame((s) => s.goHome);
   const backToSelect = useGame((s) => s.backToSelect);
   const openMenu = useGame((s) => s.openMenu);
 
-  const inSelect = screen === "select";
-  const inPlay = screen === "play";
+  const knob = useControlBus((s) => s.knob);
+  const action1 = useControlBus((s) => s.action1);
+  const action2 = useControlBus((s) => s.action2);
+  const main = useControlBus((s) => s.main);
+
   const idle = screen === "boot";
-  const game = gameById(gameId);
-  const lucky = gameId === "lucky";
+  const inPlay = screen === "play";
 
-  // pad labels + behaviour depend on the screen
-  const pad = inSelect
-    ? { up: "◀ PREV", down: "NEXT ▶", onUp: () => moveSelect(-1), onDown: () => moveSelect(1) }
-    : lucky
-      ? { up: "—", down: "—", onUp: () => {}, onDown: () => {} }
-      : game.market === "strike"
-        ? {
-            up: "▲ LONG",
-            down: "▼ SHORT",
-            onUp: () => setPending("UP"),
-            onDown: () => setPending("DOWN"),
-          }
-        : {
-            up: "▲ UP",
-            down: "▼ DOWN",
-            onUp: () => setPending("UP"),
-            onDown: () => setPending("DOWN"),
-          };
-
-  const padsDisabled = idle || (inPlay && lucky);
-  const selUp = inPlay && !lucky && pendingDir === "UP";
-  const selDown = inPlay && !lucky && pendingDir === "DOWN";
-
-  const action = inSelect
-    ? { label: "▶ PLAY", run: pickGame, off: false }
-    : lucky
-      ? { label: "LUCKY", run: fire, off: idle || placing || stake > balance }
-      : { label: placing ? "…" : "FIRE", run: fire, off: idle || placing || stake > balance };
-
-  const padSfx = inSelect ? "move" : "tick";
-  const isPlay = action.label === "▶ PLAY";
+  const m = main ?? { label: "—", onPress: () => {}, disabled: true };
 
   return (
     <div className={`deck ${idle ? "deck-idle" : ""}`}>
       <div className="deck-pads">
-        <button
-          className={`pad ${selUp ? "sel" : ""}`}
-          disabled={padsDisabled}
-          onClick={() => {
-            buzz(6);
-            sfx(padSfx);
-            pad.onUp();
-          }}
-        >
-          <span className="pad-l">{pad.up}</span>
-        </button>
-        <button
-          className={`pad ${selDown ? "sel" : ""}`}
-          disabled={padsDisabled}
-          onClick={() => {
-            buzz(6);
-            sfx(padSfx);
-            pad.onDown();
-          }}
-        >
-          <span className="pad-l">{pad.down}</span>
-        </button>
+        <Pad spec={action1} fallback="—" />
+        <Pad spec={action2} fallback="—" />
       </div>
 
       <div className="deck-right">
         <button
-          className="act"
-          disabled={action.off}
+          className={`act ${m.pulse ? "pulse" : ""} ${m.loading ? "loading" : ""}`}
+          disabled={m.disabled || m.loading}
           onClick={() => {
-            buzz(isPlay ? 6 : [8, 24, 8]);
-            sfx(isPlay ? "start" : "fire");
-            void action.run();
+            if (m.disabled || m.loading) return;
+            buzz([8, 24, 8]);
+            sfx("fire");
+            m.onPress();
           }}
         >
-          {action.label}
+          {m.loading ? "···" : m.label}
         </button>
-        <StakeWheel active={inPlay} />
+        <Knob spec={knob ?? null} />
       </div>
 
       <div className="deck-hw">
@@ -125,7 +85,9 @@ export function Deck() {
         >
           {inPlay ? "BACK" : "HOME"}
         </button>
-        <span className="hwchip mono">${fmtUsd(stake, 0)}</span>
+        <span className="hwchip mono">
+          {knob ? (knob.format ? knob.format(knob.value) : knob.value) : "—"}
+        </span>
       </div>
     </div>
   );

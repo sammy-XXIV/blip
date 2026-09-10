@@ -540,13 +540,27 @@
   transform: translateY(6px);
   box-shadow: 0 1px 0 #12294a, inset 0 2px 0 #79a8dd;
 }
+/* colour variants bound by the control bus */
+.pad.c-neutral {
+  background: linear-gradient(180deg, #3a4048, #262b31 55%, #171b20);
+  color: #cfd8e2;
+  box-shadow: 0 7px 0 #0c0e11, 0 10px 16px #000000a0, inset 0 2px 0 #4a525c;
+}
+.pad.c-neutral:active {
+  box-shadow: 0 1px 0 #0c0e11, inset 0 2px 0 #4a525c;
+}
+.pad.c-amber {
+  background: linear-gradient(180deg, var(--amber-bright), var(--amber) 55%, #d97e0e);
+  color: #1a1206;
+  box-shadow: 0 7px 0 #8f4e08, 0 10px 16px #000000a0, inset 0 2px 0 #ffe1ab;
+}
 .pad.sel {
   background: linear-gradient(180deg, #a6d6ff, #5aa8f0 55%, #2f83cf);
   color: #06233d;
-  box-shadow:
-    0 7px 0 #1a5c96,
-    0 0 18px #5aa8f088,
-    inset 0 2px 0 #d3ecff;
+  box-shadow: 0 7px 0 #1a5c96, 0 0 18px #5aa8f088, inset 0 2px 0 #d3ecff;
+}
+.pad.pulse {
+  animation: deck-pulse 1s ease-in-out infinite;
 }
 .pad:disabled {
   background: linear-gradient(180deg, #23262b, #14171b);
@@ -557,6 +571,11 @@
   font-size: 15px;
   font-weight: 700;
   letter-spacing: 0.04em;
+}
+@keyframes deck-pulse {
+  50% {
+    filter: brightness(1.35);
+  }
 }
 
 /* right column: orange ACTION button + stake wheel */
@@ -590,24 +609,45 @@
   color: var(--ink-faint);
   box-shadow: 0 5px 0 #0b0d0f;
 }
+.act.pulse {
+  animation: deck-pulse 1s ease-in-out infinite;
+}
+.act.loading {
+  color: #6b4a12;
+}
 
+/* ---- knob (bound by the control bus) ---- */
 .wheel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+}
+.wheel-off {
+  opacity: 0.4;
+}
+.wheel-label {
+  font-size: 8px;
+  letter-spacing: 0.16em;
+  color: var(--scr-blue-faint);
+}
+.wheel-face-box {
   position: relative;
   width: 62px;
-  height: 120px;
+  height: 108px;
   border-radius: 11px;
   background: linear-gradient(90deg, #0a0908 0%, #34322a 20%, #1a1915 50%, #34322a 80%, #0a0908 100%);
   box-shadow: inset 0 0 0 2px #050504, inset 0 4px 8px #000, 0 2px 4px #000000aa;
   overflow: hidden;
   cursor: grab;
   touch-action: none;
-  -webkit-mask: linear-gradient(180deg, transparent, #000 26%, #000 74%, transparent);
-  mask: linear-gradient(180deg, transparent, #000 26%, #000 74%, transparent);
+  -webkit-mask: linear-gradient(180deg, transparent, #000 24%, #000 76%, transparent);
+  mask: linear-gradient(180deg, transparent, #000 24%, #000 76%, transparent);
 }
-.wheel:active {
+.wheel-face-box:active {
   cursor: grabbing;
 }
-.wheel:focus-visible {
+.wheel-face-box:focus-visible {
   outline: 2px solid var(--scr-blue);
   outline-offset: 2px;
 }
