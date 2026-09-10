@@ -908,57 +908,86 @@
 .g-shot {
   gap: 8px;
 }
-.shot-row {
+.shot-stage {
+  flex: 1;
+  min-height: 130px;
   display: flex;
   align-items: stretch;
-  gap: 12px;
+  justify-content: center;
+  gap: 22px;
+  padding: 6px 0;
 }
-.shot-main {
-  flex: 1;
+.shot-gauge {
+  position: relative;
+  width: 18px;
+  border-radius: 9px;
+  background: linear-gradient(180deg, rgba(255, 157, 30, 0.16) 0%, #0a1826 42%, #050c16 100%);
+  border: 2px solid var(--line);
+  box-shadow: inset 0 2px 6px #000, inset 0 0 12px rgba(90, 168, 240, 0.1);
+}
+.shot-strike-tick {
+  position: absolute;
+  left: -5px;
+  right: -5px;
+  top: 8px;
+  height: 3px;
+  background: var(--amber);
+  box-shadow: 0 0 8px var(--amber);
+}
+.shot-strike-cap {
+  position: absolute;
+  right: 22px;
+  top: 2px;
+  font-size: 10px;
+  color: var(--amber);
+  white-space: nowrap;
+}
+.shot-rocket {
+  position: absolute;
+  left: 50%;
+  transform: translate(-50%, 50%);
+  font-size: 16px;
+  line-height: 1;
+  color: var(--scr-blue-bright);
+  text-shadow: 0 0 10px var(--scr-blue);
+  transition: bottom 0.3s cubic-bezier(0.2, 0.7, 0.3, 1);
+}
+.shot-rocket.flip {
+  rotate: 180deg;
+}
+.shot-rocket.live {
+  animation: rocket-bob 0.9s ease-in-out infinite;
+}
+.shot-rocket.hit {
+  color: var(--amber-bright);
+  text-shadow: 0 0 14px var(--amber);
+}
+@keyframes rocket-bob {
+  50% {
+    filter: drop-shadow(0 0 6px currentColor);
+  }
+}
+.shot-side {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 4px;
 }
 .shot-reach {
-  font-size: 12px;
+  font-size: 20px;
   font-weight: 700;
   color: var(--amber);
-  letter-spacing: 0.04em;
+  letter-spacing: 0.02em;
 }
 .shot-reach.hit {
   color: var(--scr-blue-bright);
 }
-.shot-gauge {
-  position: relative;
-  width: 12px;
-  border-radius: 6px;
-  background: linear-gradient(180deg, #ff9d1e22, #0a1826 60%);
-  border: 2px solid var(--line);
-  box-shadow: inset 0 2px 5px #000;
-}
-.shot-strike-tick {
-  position: absolute;
-  left: -3px;
-  right: -3px;
-  top: 6px;
-  height: 2px;
-  background: var(--amber);
-  box-shadow: 0 0 6px var(--amber);
-}
-.shot-marker {
-  position: absolute;
-  left: 50%;
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  transform: translate(-50%, 50%);
-  background: var(--scr-blue-bright);
-  box-shadow: 0 0 8px var(--scr-blue);
-  transition: bottom 0.25s ease;
-}
-.shot-marker.hit {
-  background: var(--amber-bright);
-  box-shadow: 0 0 10px var(--amber);
+.shot-cap {
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  color: var(--scr-blue-faint);
+  margin-bottom: 6px;
 }
 .shot-line {
   font-size: 12px;
@@ -1071,4 +1100,182 @@
 .lucky-hist .hd.cashed {
   color: var(--scr-blue-dim);
   opacity: 0.7;
+}
+
+/* ======================================================================
+   GAME-FEEL: countdown ring, swing meter, motion
+   ====================================================================== */
+.ring {
+  position: relative;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+}
+.ring svg {
+  width: 100%;
+  height: 100%;
+}
+.ring-track {
+  fill: none;
+  stroke: #ffffff12;
+  stroke-width: 4;
+}
+.ring-bar {
+  fill: none;
+  stroke: var(--scr-blue);
+  stroke-width: 4;
+  stroke-linecap: round;
+  filter: drop-shadow(0 0 4px #5aa8f0aa);
+  transition: stroke-dashoffset 0.25s linear;
+}
+.ring-bar.hot {
+  stroke: var(--down-bright);
+  filter: drop-shadow(0 0 5px #ef6a3f);
+  animation: ring-flash 0.7s steps(1) infinite;
+}
+@keyframes ring-flash {
+  50% {
+    opacity: 0.4;
+  }
+}
+.ring-lbl {
+  position: absolute;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--scr-white);
+}
+
+/* CALL swing meter */
+.call-stage {
+  flex: 1;
+  min-height: 130px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 26px;
+  padding: 6px 0;
+}
+.swing {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  height: 100%;
+}
+.swing-end {
+  font-size: 13px;
+  color: var(--scr-blue-faint);
+}
+.swing-track {
+  position: relative;
+  flex: 1;
+  width: 20px;
+  border-radius: 10px;
+  background: #050c16;
+  border: 2px solid var(--line);
+  box-shadow: inset 0 2px 6px #000;
+  overflow: hidden;
+}
+.swing-fill {
+  position: absolute;
+  left: 0;
+  right: 0;
+  transition: height 0.3s cubic-bezier(0.2, 0.7, 0.3, 1);
+}
+.swing-fill.up {
+  top: 0;
+  background: linear-gradient(180deg, #5aa8f0, #5aa8f000);
+}
+.swing-fill.down {
+  bottom: 0;
+  background: linear-gradient(0deg, #c8412a, #c8412a00);
+}
+.swing-knob {
+  position: absolute;
+  left: 50%;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  background: var(--scr-white);
+  box-shadow: 0 0 10px #fff;
+  transition: top 0.3s cubic-bezier(0.2, 0.7, 0.3, 1);
+}
+.swing.live .swing-knob {
+  animation: knob-pulse 0.9s ease-in-out infinite;
+}
+.swing-knob.up {
+  box-shadow: 0 0 12px #5aa8f0;
+}
+.swing-knob.down {
+  box-shadow: 0 0 12px #ef6a3f;
+}
+@keyframes knob-pulse {
+  50% {
+    transform: translate(-50%, -50%) scale(1.25);
+  }
+}
+
+/* LUCKY coin: ring hugs it, spin harder */
+.coin {
+  position: relative;
+}
+.coin.spin {
+  animation: coin-spin 0.32s linear infinite;
+}
+.coin.landed {
+  animation: coin-land 0.4s cubic-bezier(0.2, 1.4, 0.4, 1);
+}
+@keyframes coin-land {
+  from {
+    transform: rotateY(540deg) scale(0.8);
+  }
+  to {
+    transform: rotateY(0) scale(1);
+  }
+}
+.coin .ring {
+  position: absolute;
+  inset: -12px;
+}
+
+/* screen enters with a quick slide-fade */
+.scr-game,
+.scr-select {
+  animation: scr-in 0.22s ease-out;
+}
+@keyframes scr-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+/* price ticks with a soft breathing glow */
+.scr-price {
+  animation: price-breathe 2.4s ease-in-out infinite;
+}
+@keyframes price-breathe {
+  50% {
+    text-shadow: 0 0 22px #5aa8f077;
+  }
+}
+
+/* result flash gets a shake */
+.flash {
+  animation: flash-in 0.16s ease-out, flash-shake 0.4s ease-in-out;
+}
+@keyframes flash-shake {
+  10%,
+  30%,
+  50% {
+    transform: translateX(-4px);
+  }
+  20%,
+  40% {
+    transform: translateX(4px);
+  }
+  60% {
+    transform: translateX(0);
+  }
 }

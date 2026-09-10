@@ -5,6 +5,7 @@ import { STAKE_MAX, STAKE_MIN, multiplierForStreak } from "../../game/config";
 import { fmtClock } from "../../game/format";
 import { ResultFlash } from "../../components/ResultFlash";
 import { GameHeader, PayLine, useMainButton, useOpenRounds } from "./shared";
+import { CountdownRing } from "./parts";
 
 export function LuckyScreen() {
   const now = useNow(200);
@@ -45,14 +46,19 @@ export function LuckyScreen() {
     .slice(0, 12);
 
   const face = placing ? "?" : lead ? (lead.direction === "UP" ? "▲" : "▼") : "?";
+  const frac = lead ? Math.max(0, (lead.expiresAt - now) / (lead.expiresAt - lead.openedAt)) : 0;
+  const secs = lead ? Math.max(0, Math.ceil((lead.expiresAt - now) / 1000)) : 0;
 
   return (
     <div className="scr scr-game g-lucky">
       <GameHeader title="LUCKY" />
 
       <div className="lucky-stage">
-        <div className={`coin ${placing ? "spin" : ""} ${lead ? (lead.direction === "UP" ? "up" : "down") : ""}`}>
+        <div
+          className={`coin ${placing ? "spin" : ""} ${lead ? `landed ${lead.direction === "UP" ? "up" : "down"}` : ""}`}
+        >
           <span>{face}</span>
+          {lead && <CountdownRing frac={frac} label={`${secs}s`} size={116} />}
         </div>
         <span className="lucky-tag mono">
           {placing ? "FLIPPING…" : lead ? "IN PLAY" : "ONE TAP · WE FLIP"}

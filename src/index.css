@@ -60,7 +60,7 @@ body,
 }
 
 body {
-  background: var(--void);
+  background: #04070c;
   color: var(--ink);
   font-family: var(--font-ui);
   font-size: 15px;
@@ -70,12 +70,47 @@ body {
   text-rendering: optimizeLegibility;
 }
 
+/* workshop / blueprint backdrop behind the console */
 #root {
+  position: relative;
   display: flex;
   justify-content: center;
   align-items: stretch;
+  isolation: isolate;
   background:
-    radial-gradient(900px 500px at 50% -5%, #17130c 0%, var(--void) 62%);
+    /* soft focus glow on the device */
+    radial-gradient(680px 520px at 50% 38%, rgba(90, 168, 240, 0.09), transparent 70%),
+    /* coarse blueprint grid */
+    repeating-linear-gradient(0deg, rgba(90, 150, 220, 0.05) 0 1px, transparent 1px 88px),
+    repeating-linear-gradient(90deg, rgba(90, 150, 220, 0.05) 0 1px, transparent 1px 88px),
+    /* fine grid */
+    repeating-linear-gradient(0deg, rgba(90, 150, 220, 0.028) 0 1px, transparent 1px 22px),
+    repeating-linear-gradient(90deg, rgba(90, 150, 220, 0.028) 0 1px, transparent 1px 22px),
+    linear-gradient(180deg, #060b14 0%, #04070c 55%, #03050a 100%);
+}
+/* faint schematic arcs drifting behind */
+#root::before {
+  content: "";
+  position: absolute;
+  inset: -10%;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(closest-side at 12% 22%, transparent 60%, rgba(255, 157, 30, 0.05) 61%, transparent 63%),
+    radial-gradient(closest-side at 88% 78%, transparent 66%, rgba(90, 168, 240, 0.06) 67%, transparent 70%),
+    radial-gradient(closest-side at 78% 12%, transparent 72%, rgba(90, 168, 240, 0.04) 73%, transparent 76%);
+  background-size: 520px 520px, 640px 640px, 380px 380px;
+  background-repeat: no-repeat;
+  opacity: 0.9;
+}
+/* top & bottom scrim so the grid fades at the edges */
+#root::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: radial-gradient(150% 120% at 50% 45%, transparent 40%, #03050a 96%);
 }
 
 button {
