@@ -27,7 +27,9 @@ const ONE = 1_000_000n;
 const COLLATERAL = SOMNIA_TESTNET_ADDRESSES.testUsdc;
 const ASSET = process.argv[2]?.toUpperCase() || "BTC";
 const STAKE = Number(process.argv[3] || 2);
-const SIDE = (process.argv[4] || "UP").toUpperCase(); // UP | DOWN
+const SIDE = (process.argv[4] || "UP").toUpperCase(); // UP/LONG | DOWN/SHORT
+const KIND = (process.argv[5] || "updown").toLowerCase(); // updown | strike
+const wantStrike = KIND === "strike" || KIND === "moonshot";
 
 const me = privateKeyToAccount(PK).address;
 const pub = createPublicClient({ chain: somniaShannon, transport: http("https://dream-rpc.somnia.network") });
@@ -67,25 +69,29 @@ async function main() {
 
   log(`\nprice    ${ASSET} = ${(await ex.client.fetchPrice(ASSET))?.price}`);
 
-  // discover a live 60s market for the asset
+  // discover a live 60s market for the asset (strike vs up/down per KIND)
   const now = Math.floor(Date.now() / 1000);
   const live = await ex.client.listLiveBinaryMarkets({ asset: ASSET });
   const cands = live
     .map((m) => ({ ...m, iv: Number(m.intervalSec ?? m.interval ?? 0), exp: Number(m.expiry ?? 0) }))
-    .filter((m) => m.exp > now + 15)
+    .filter((m) => m.exp > now + 15 && (String(m.strike ?? "0") !== "0") === wantStrike)
     .sort((a, b) => Math.abs(a.iv - 60) - Math.abs(b.iv - 60) || a.exp - b.exp);
   const pick = cands.find((m) => m.iv === 60) ?? cands[0];
-  if (!pick) throw new Error(`no live ${ASSET} market`);
+  if (!pick) throw new Error(`no live ${wantStrike ? "fixed-strike" : "up/down"} ${ASSET} market`);
   const marketId = (pick.marketId ?? pick.id);
-  log(`market   ${marketId}  interval=${pick.iv}s  expires in ${Math.round((pick.exp - now))}s`);
+  const strikeP = Number(pick.strike ?? 0) / 1e18;
+  log(`market   ${marketId}  interval=${pick.iv}s  expires in ${Math.round(pick.exp - now)}s` +
+    (wantStrike ? `  strike=${strikeP}` : ""));
 
   const mo = await ex.client.getMarketOnchain(marketId);
   log(`onchain  status=${mo.status} finalized=${mo.finalized} pool=${mo.pool}`);
   if (mo.finalized || mo.status !== 1) throw new Error("market not trading");
 
-  const side = SIDE === "UP" ? "BUY_YES" : "BUY_NO";
-  const outcomeIdx = SIDE === "UP" ? 0 : 1;
-  const qty = BigInt(Math.round((STAKE / 0.99) * Number(ONE)));
+  const side = (SIDE === "UP" || SIDE === "LONG") ? "BUY_YES" : "BUY_NO";
+  const outcomeIdx = (SIDE === "UP" || SIDE === "LONG") ? 0 : 1;
+  const LOT = 1000n;
+  let qty = (BigInt(Math.round((STAKE / 0.99) * Number(ONE))) / LOT) * LOT;
+  if (qty < LOT) qty = LOT;
   log(`\norder    ${side} qty=${Number(qty) / 1e6} @<=0.99 (IOC)`);
   const res = await ex.trader.placeOrder({
     pool: mo.pool,

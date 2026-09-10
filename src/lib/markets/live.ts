@@ -10,7 +10,7 @@ import type {
   Round,
 } from "./types";
 
-const PRICE_SCALE = 1e18; // oracle / strike price scale
+const STRIKE_SCALE = 100; // market `strike` is the price in cents
 
 const ASSETS: Asset[] = ["BTC", "ETH"];
 const PRICE_MS = 1500;
@@ -154,24 +154,39 @@ export class LiveMarkets implements MarketsAdapter {
     // One real Event Contract position: buy the called outcome straight off the
     // book (IOC). At cap 0.99 the max spend is ~stake; each token pays 1
     // collateral if it wins. Two opposite-side buyers cross via a pool mint, so
-    // this fills even with no resting seller.
-    const qtyRaw = BigInt(Math.round((stake / 0.99) * Number(ONE)));
-    const res = await this.ex.trader.placeOrder({
-      pool,
-      side,
-      price: probabilityToPrice(0.99),
-      quantity: qtyRaw,
-      orderType: 2, // IOC
-    });
+    // this fills whenever the other side has any interest — retry a few times
+    // since the 60s book refreshes constantly. Quantity lands on the lot grid.
+    const LOT = 1000n;
+    let qtyRaw = (BigInt(Math.round((stake / 0.99) * Number(ONE))) / LOT) * LOT;
+    if (qtyRaw < LOT) qtyRaw = LOT;
 
     let heldRaw = 0n;
     let costRaw = 0n;
-    for (const f of res.fills ?? []) {
-      heldRaw += BigInt(f.quantityFilled);
-      costRaw += (BigInt(f.quantityFilled) * BigInt(f.fillPrice)) / ONE;
+    for (let attempt = 0; attempt < 4 && heldRaw === 0n; attempt++) {
+      if (attempt) await new Promise((r) => setTimeout(r, 1300));
+      try {
+        const res = await this.ex.trader.placeOrder({
+          pool,
+          side,
+          price: probabilityToPrice(0.99),
+          quantity: qtyRaw,
+          orderType: 2, // IOC
+        });
+        for (const f of res.fills ?? []) {
+          heldRaw += BigInt(f.quantityFilled);
+          costRaw += (BigInt(f.quantityFilled) * BigInt(f.fillPrice)) / ONE;
+        }
+      } catch (e) {
+        // an IOC that crosses nothing reverts — retry; anything else is real
+        if (!/no ?fill|ImmediateOrCancel/i.test(String((e as Error)?.message ?? e))) throw e;
+      }
     }
     if (heldRaw === 0n) {
-      throw new Error("The 60s book is empty right now — try again");
+      throw new Error(
+        direction === "UP"
+          ? "No taker right now — try again in a moment"
+          : "The DOWN side is quiet — try again, or call UP",
+      );
     }
 
     const held = Number(heldRaw) / Number(ONE);
@@ -244,7 +259,7 @@ export class LiveMarkets implements MarketsAdapter {
     const pick = usable.find((m) => intervalOf(m) === windowSec) ?? usable[0];
     if (!pick) return undefined;
     const id = idOf(pick);
-    return id ? { id: id as Hex, strike: num(pick.strike) / PRICE_SCALE } : undefined;
+    return id ? { id: id as Hex, strike: num(pick.strike) / STRIKE_SCALE } : undefined;
   }
 
   private async pollPrices() {
