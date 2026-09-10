@@ -1,32 +1,100 @@
-# React + TypeScript + Vite
+# BLIP
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+**A gamified trading console for DreamDEX Event Contracts on Somnia.**
 
-Currently, two official plugins are available:
+Blip turns prediction-market trading into a one-handed arcade game. You get a
+handheld console — two big call pads, a knurled stake wheel you flick, a pixel
+screen — and you call which way BTC or ETH moves before the window lands. Win the
+call, keep the streak, streak bumps your multiplier.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+Built for the **Somnia × DreamDEX Event Contracts Hackathon**.
 
-## React Compiler
+---
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Two modes
 
-## Expanding the Oxlint configuration
+| | **Demo** | **Live** |
+|---|---|---|
+| Wallet | none | browser-local "play wallet" (burner) |
+| Money | play money | testnet tUSDC on Somnia Shannon |
+| Rounds | 30s / 60s / 2m, simulated price | real DreamDEX Event Contracts — 1H / 4H / 1D |
+| Settlement | instant, local | on-chain; winners **auto-redeemed** |
 
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
+Demo is the arcade experience and the UX showcase. Live proves it's real:
+every call in live mode is a genuine `mintSet` → `placeOrder` → on-chain
+settlement → `redeem`, using `@somnia-chain/markets-sdk`.
 
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+Switch modes in-game: **MENU → DEMO / LIVE**.
+
+---
+
+## How live mode uses Event Contracts
+
+1. **Play wallet.** On first load Blip generates a throwaway keypair in the
+   browser (`localStorage`). You fund it once from the Somnia faucet + the SDK's
+   `trader.faucet()` (test tUSDC). After that every trade signs itself — **no
+   wallet popups** — so the game stays tap-and-go.
+2. **Call.** Blip discovers the live binary market for the asset/window
+   (`client.listLiveBinaryMarkets`), gates on its on-chain status
+   (`getMarketOnchain`), then `mintSet`s your stake into Up + Down tokens and
+   crosses the book toward your called side (`placeOrder`, IOC).
+3. **Settle.** Blip polls `getMarketOnchain` for each open round. On resolution
+   it marks the round Won/Lost from `winningOutcome` and **auto-redeems the
+   winning side** — you never have to claim.
+4. Open positions survive a refresh (persisted locally by `marketId`).
+
+### Why not 30-second rounds on-chain?
+
+DreamDEX's minimum series cadence is **60 seconds**
+(`MIN_SERIES_INTERVAL_SEC = 60`), and the live BTC/ETH markets on Shannon today
+run hourly. So live mode plays the real cadences (1H / 4H / 1D) with hands-free
+auto-settlement, and the sub-minute arcade loop lives in demo mode. Running a
+custom 60s series (Blip as market creator) is the natural next step.
+
+---
+
+## Stack
+
+- **React 19 + TypeScript + Vite**
+- **zustand** for game state
+- **`@somnia-chain/markets-sdk` + viem** for the on-chain layer
+- No backend. The burner-wallet model keeps it fully client-side.
+
+## Run it
+
+```bash
+npm install
+npm run dev        # http://localhost:5173  (demo mode by default)
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+Live mode locally: set `VITE_DEMO_MODE=false` in `.env.local`, or just toggle in
+the MENU. Live mode needs a funded play wallet — the boot screen walks you
+through the faucet steps.
+
+```bash
+npm run build      # typecheck + production bundle → dist/
+```
+
+## Env
+
+`.env` (Somnia Shannon defaults are pre-filled):
+
+```
+VITE_RPC_URL=https://dream-rpc.somnia.network
+VITE_WS_RPC_URL=wss://api.infra.testnet.somnia.network/ws
+VITE_INDEXER_URL=https://dev.smk.somnia.host/v1/graphql
+VITE_DEMO_MODE=true
+```
+
+## Layout
+
+```
+src/
+  game/        store (zustand), round config, formatting
+  lib/
+    markets/   adapter interface + demo + live (DreamDEX) implementations
+    wallet.ts  browser-local burner "play wallet"
+    somnia.ts  chain / RPC / address constants
+  components/  Deck (pads, wheel, hw buttons), StakeWheel, MenuOverlay, ...
+  screens/     BootScreen (title + live fund gate), ConsoleScreen (the game)
+```
