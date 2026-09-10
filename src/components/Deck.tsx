@@ -1,6 +1,7 @@
 import { useGame } from "../game/store";
 import { gameById } from "../game/config";
 import { fmtUsd } from "../game/format";
+import { sfx } from "../lib/sound";
 import { StakeWheel } from "./StakeWheel";
 
 const buzz = (p: number | number[]) => {
@@ -58,6 +59,9 @@ export function Deck() {
       ? { label: "LUCKY", run: fire, off: idle || placing || stake > balance }
       : { label: placing ? "…" : "FIRE", run: fire, off: idle || placing || stake > balance };
 
+  const padSfx = inSelect ? "move" : "tick";
+  const isPlay = action.label === "▶ PLAY";
+
   return (
     <div className={`deck ${idle ? "deck-idle" : ""}`}>
       <div className="deck-pads">
@@ -66,6 +70,7 @@ export function Deck() {
           disabled={padsDisabled}
           onClick={() => {
             buzz(6);
+            sfx(padSfx);
             pad.onUp();
           }}
         >
@@ -76,6 +81,7 @@ export function Deck() {
           disabled={padsDisabled}
           onClick={() => {
             buzz(6);
+            sfx(padSfx);
             pad.onDown();
           }}
         >
@@ -88,7 +94,8 @@ export function Deck() {
           className="act"
           disabled={action.off}
           onClick={() => {
-            buzz(action.label === "▶ PLAY" ? 6 : [8, 24, 8]);
+            buzz(isPlay ? 6 : [8, 24, 8]);
+            sfx(isPlay ? "start" : "fire");
             void action.run();
           }}
         >
@@ -102,6 +109,7 @@ export function Deck() {
           className="hwbtn"
           onClick={() => {
             buzz(6);
+            sfx("tick");
             openMenu();
           }}
         >
@@ -111,6 +119,7 @@ export function Deck() {
           className="hwbtn"
           onClick={() => {
             buzz(6);
+            sfx("tick");
             inPlay ? backToSelect() : goHome();
           }}
         >

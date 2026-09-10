@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { markets, type Asset, type Direction, type Round } from "../lib/markets";
+import { sfx } from "../lib/sound";
 import {
   GAMES,
   MOONSHOT_MULTIPLIER,
@@ -135,6 +136,7 @@ export const useGame = create<GameState>((set, get) => ({
               streak,
             };
           }
+          if (toast) sfx(toast.status === "WON" ? "win" : toast.status === "LOST" ? "lose" : "void");
           return { streak, bestStreak: best, result: toast };
         });
       }

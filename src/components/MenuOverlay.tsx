@@ -1,11 +1,14 @@
+import { useState } from "react";
 import { CURRENT_MODE, setMode } from "../lib/markets";
 import { rotateBurner } from "../lib/wallet";
+import { isMuted, toggleMute } from "../lib/sound";
 import { useBurnerFunds } from "../hooks/useBurnerFunds";
 import { useGame } from "../game/store";
 
 export function MenuOverlay() {
   const close = useGame((s) => s.closeMenu);
   const live = CURRENT_MODE === "live";
+  const [muted, setMuted] = useState(isMuted());
 
   const resetDemo = () => {
     try {
@@ -33,6 +36,24 @@ export function MenuOverlay() {
           </button>
           <button className={`menu-opt ${live ? "on" : ""}`} onClick={() => setMode("live")}>
             LIVE
+          </button>
+        </div>
+      </div>
+
+      <div className="menu-row">
+        <span className="label">Sound</span>
+        <div className="menu-seg">
+          <button
+            className={`menu-opt ${!muted ? "on" : ""}`}
+            onClick={() => setMuted(toggleMute())}
+          >
+            ON
+          </button>
+          <button
+            className={`menu-opt ${muted ? "on" : ""}`}
+            onClick={() => setMuted(toggleMute())}
+          >
+            OFF
           </button>
         </div>
       </div>

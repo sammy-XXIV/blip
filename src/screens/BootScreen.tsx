@@ -2,6 +2,7 @@ import { useState } from "react";
 import { IS_DEMO, markets } from "../lib/markets";
 import { useGame } from "../game/store";
 import { useBurnerFunds } from "../hooks/useBurnerFunds";
+import { sfx } from "../lib/sound";
 
 export function BootScreen() {
   const enter = useGame((s) => s.enterSelect);
@@ -19,7 +20,7 @@ export function BootScreen() {
         Win the call, ride the streak.
       </p>
 
-      <button className="boot-start" onClick={enter} disabled={!ready}>
+      <button className="boot-start" onClick={() => { sfx("start"); enter(); }} disabled={!ready}>
         START
       </button>
 
@@ -60,7 +61,7 @@ function LiveBoot({ onStart, priceReady }: { onStart: () => void; priceReady: bo
         <span className="boot-press">{priceReady ? "PRESS START" : "TUNING IN…"}</span>
         <h1 className="boot-head">Play wallet funded.</h1>
         <p className="boot-sub">Every call signs itself — no wallet popups. Just tap and go.</p>
-        <button className="boot-start" onClick={onStart} disabled={!priceReady}>
+        <button className="boot-start" onClick={() => { sfx("start"); onStart(); }} disabled={!priceReady}>
           START
         </button>
         <div className="boot-foot">
