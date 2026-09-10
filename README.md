@@ -39,12 +39,24 @@ right side.
 
 Demo is the UX showcase. Live proves it's real — switch with **MENU → DEMO / LIVE**.
 
-### How live mode uses Event Contracts
+### Sign-in / the play wallet
 
-1. **Play wallet.** First load generates a throwaway keypair in the browser
-   (`localStorage`). Fund it once — a little STT for gas, then the SDK's
-   `trader.faucet()` mints test tUSDC. After that every trade signs itself:
-   **no wallet popups**, so the game stays tap-and-go.
+Blip trades from a **play wallet** — a raw key the browser holds so every round
+signs itself with **no wallet popups**. Two ways to get one:
+
+- **Default (no config):** the browser auto-generates the key and caches it in
+  `localStorage`. Zero friction, but it's per-browser.
+- **With Privy (`VITE_PRIVY_APP_ID` set):** the user signs in with **email /
+  Google** (no seed phrase). Blip asks the Privy embedded wallet to sign one
+  fixed message and derives the play key as `keccak256(signature)` — so it's
+  **deterministic**: same login → same wallet on any device, fully recoverable,
+  nothing sensitive stored. After that, silent signing as before. The Privy code
+  is lazy-loaded — it ships zero bytes when no app id is set.
+
+Then fund it once — a little STT for gas, then `trader.faucet()` mints test
+tUSDC — and you're in.
+
+### How live mode uses Event Contracts
 2. **Fire.** Blip discovers the live 60s market for the asset and kind
    (`listLiveBinaryMarkets` — filtered by `strike == 0` for CALL/LUCKY, `strike != 0`
    for MOONSHOT), gates on `getMarketOnchain` status, then places one real
@@ -92,8 +104,9 @@ MENU. It needs a funded play wallet — the boot screen walks the faucet steps.
 in `.env.local` with a Shannon address holding a little STT):
 
 ```bash
-node scripts/live-check.mjs BTC 3 UP            # CALL
-node scripts/live-check.mjs BTC 3 LONG moonshot # MOONSHOT
+node scripts/live-check.mjs BTC 3 UP                  # CALL (buy -> settle -> redeem)
+node scripts/live-check.mjs BTC 3 LONG moonshot       # MOONSHOT (fixed-strike market)
+node scripts/live-check.mjs BTC 3 UP updown cash      # cash out mid-round (sell-back)
 ```
 
 ## Env
@@ -105,6 +118,7 @@ VITE_RPC_URL=https://dream-rpc.somnia.network
 VITE_WS_RPC_URL=wss://api.infra.testnet.somnia.network/ws
 VITE_INDEXER_URL=https://dev.smk.somnia.host/v1/graphql
 VITE_DEMO_MODE=true
+VITE_PRIVY_APP_ID=          # optional — set it to enable email sign-in
 ```
 
 ## Layout

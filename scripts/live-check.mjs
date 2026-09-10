@@ -34,14 +34,15 @@ const wantStrike = KIND === "strike" || KIND === "moonshot";
 const me = privateKeyToAccount(PK).address;
 const pub = createPublicClient({ chain: somniaShannon, transport: http("https://dream-rpc.somnia.network") });
 
+// construct for reads, then attach the signer — mirrors src/lib/markets/live.ts
 const ex = new SomniaMarkets({
   chain: somniaShannon,
   addresses: SOMNIA_TESTNET_ADDRESSES,
   wsRpcUrl: "wss://api.infra.testnet.somnia.network/ws",
   indexerUrl: "https://dev.smk.somnia.host/v1/graphql",
   priceFeed: SOMNIA_TESTNET_PRICE_FEED,
-  privateKey: PK,
 });
+ex.setSigner({ privateKey: PK });
 
 const log = (...a) => console.log(...a);
 const usdc = async () =>
