@@ -7,6 +7,8 @@ import { useGame } from "../game/store";
 
 export function MenuOverlay() {
   const close = useGame((s) => s.closeMenu);
+  const screenFx = useGame((s) => s.screenFx);
+  const toggleScreenFx = useGame((s) => s.toggleScreenFx);
   const live = CURRENT_MODE === "live";
   const [muted, setMuted] = useState(isMuted());
 
@@ -52,6 +54,24 @@ export function MenuOverlay() {
           <button
             className={`menu-opt ${muted ? "on" : ""}`}
             onClick={() => setMuted(toggleMute())}
+          >
+            OFF
+          </button>
+        </div>
+      </div>
+
+      <div className="menu-row">
+        <span className="label">Screen FX</span>
+        <div className="menu-seg">
+          <button
+            className={`menu-opt ${screenFx ? "on" : ""}`}
+            onClick={() => !screenFx && toggleScreenFx()}
+          >
+            ON
+          </button>
+          <button
+            className={`menu-opt ${!screenFx ? "on" : ""}`}
+            onClick={() => screenFx && toggleScreenFx()}
           >
             OFF
           </button>

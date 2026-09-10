@@ -15,7 +15,14 @@ export function ResultFlash() {
   if (!result) return null;
 
   const { status, delta, streak, asset } = result;
-  const word = status === "WON" ? "HIT" : status === "VOID" ? "VOID" : "MISS";
+  const word =
+    status === "WON"
+      ? "HIT"
+      : status === "VOID"
+        ? "VOID"
+        : status === "CASHED"
+          ? "CASHED"
+          : "MISS";
 
   return (
     <button className={`flash ${status.toLowerCase()}`} onClick={clear} aria-label="dismiss result">

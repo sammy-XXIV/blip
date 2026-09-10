@@ -4,7 +4,7 @@ import { useNow } from "../../hooks/useNow";
 import { STAKE_MAX, STAKE_MIN, multiplierForStreak } from "../../game/config";
 import { fmtClock } from "../../game/format";
 import { ResultFlash } from "../../components/ResultFlash";
-import { GameHeader, PayLine, useOpenRounds } from "./shared";
+import { GameHeader, PayLine, useMainButton, useOpenRounds } from "./shared";
 
 export function LuckyScreen() {
   const now = useNow(200);
@@ -12,12 +12,12 @@ export function LuckyScreen() {
   const stake = useGame((s) => s.stake);
   const streak = useGame((s) => s.streak);
   const placing = useGame((s) => s.placing);
-  const balance = useGame((s) => s.balance);
   const rounds = useGame((s) => s.rounds);
   const setStake = useGame((s) => s.setStake);
   const cycleAsset = useGame((s) => s.cycleAsset);
-  const fire = useGame((s) => s.fire);
   const error = useGame((s) => s.error);
+
+  const { spec: main } = useMainButton("lucky", "SPIN", "SPINNING");
 
   useControls(
     {
@@ -32,15 +32,9 @@ export function LuckyScreen() {
       },
       action1: null,
       action2: { label: asset, color: "neutral", onPress: () => cycleAsset(1) },
-      main: {
-        label: placing ? "SPINNING" : "SPIN",
-        color: "amber",
-        loading: placing,
-        disabled: stake > balance,
-        onPress: () => void fire(),
-      },
+      main,
     },
-    [stake, placing, balance, asset],
+    [stake, asset, main.label, main.loading, main.disabled],
   );
 
   const open = useOpenRounds("lucky");

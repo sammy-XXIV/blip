@@ -135,6 +135,33 @@ export class DemoMarkets implements MarketsAdapter {
     return round;
   }
 
+  async cashOut(roundId: string): Promise<void> {
+    const r = this.rounds.find((x) => x.id === roundId);
+    if (!r || r.status !== "OPEN") throw new Error("Nothing to cash out");
+    const settle = this.prices[r.asset];
+
+    // how far the position is toward a win, 0..1
+    let p: number;
+    if (r.strikePrice != null) {
+      const num = r.direction === "UP" ? settle - r.entryPrice : r.entryPrice - settle;
+      const den = Math.abs(r.strikePrice - r.entryPrice) || 1;
+      p = clamp01(num / den);
+    } else {
+      const fav =
+        (r.direction === "UP" ? settle - r.entryPrice : r.entryPrice - settle) / r.entryPrice;
+      p = clamp01(0.5 + fav / 0.004);
+    }
+    // pay 0.2x when hopeless -> full payout when basically won, minus a 3% fee
+    const mark = round2(r.stake * (0.2 + p * (r.multiplier - 0.2)) * 0.97);
+
+    r.status = "CASHED";
+    r.settlePrice = settle;
+    r.payout = mark;
+    this.setBalance(this.balance + mark);
+    this.persist();
+    this.emitRounds();
+  }
+
   // --- internals -----------------------------------------------------------
 
   private tick() {
@@ -205,3 +232,4 @@ export class DemoMarkets implements MarketsAdapter {
 
 const round0 = (n: number) => Math.round(n * 100) / 100;
 const round2 = (n: number) => Math.round(n * 100) / 100;
+const clamp01 = (n: number) => Math.min(1, Math.max(0, n));

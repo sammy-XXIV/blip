@@ -5,10 +5,13 @@ import { SelectScreen } from "./screens/SelectScreen";
 import { GameScreen } from "./screens/GameScreen";
 import { Deck } from "./components/Deck";
 import { MenuOverlay } from "./components/MenuOverlay";
+import { HowtoOverlay } from "./components/HowtoOverlay";
 
 export function App() {
   const screen = useGame((s) => s.screen);
   const menuOpen = useGame((s) => s.menuOpen);
+  const howtoOpen = useGame((s) => s.howtoOpen);
+  const screenFx = useGame((s) => s.screenFx);
   const boot = useGame((s) => s.boot);
 
   useEffect(() => {
@@ -35,7 +38,9 @@ export function App() {
           {screen === "boot" && <BootScreen />}
           {screen === "select" && <SelectScreen />}
           {screen === "play" && <GameScreen />}
+          {screen === "play" && howtoOpen && <HowtoOverlay />}
           {menuOpen && <MenuOverlay />}
+          {screenFx && <div className="viz" aria-hidden />}
         </div>
 
         <Deck />

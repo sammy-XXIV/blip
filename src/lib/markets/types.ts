@@ -1,6 +1,6 @@
 export type Asset = "BTC" | "ETH";
 export type Direction = "UP" | "DOWN";
-export type RoundStatus = "OPEN" | "WON" | "LOST" | "VOID";
+export type RoundStatus = "OPEN" | "WON" | "LOST" | "VOID" | "CASHED";
 export type GameId = "call" | "lucky" | "moonshot";
 /** which DreamDEX binary market the round trades */
 export type MarketKind = "updown" | "strike";
@@ -63,6 +63,8 @@ export interface MarketsAdapter {
   subscribeBalance(cb: (balance: number) => void): () => void;
 
   placeRound(input: PlaceRoundInput): Promise<Round>;
+  /** exit an open round early for its live mark value */
+  cashOut(roundId: string): Promise<void>;
   /** full current round list, newest first; fires on every change */
   subscribeRounds(cb: (rounds: Round[]) => void): () => void;
 

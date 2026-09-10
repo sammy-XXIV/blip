@@ -4,7 +4,7 @@ import { useControls } from "../../game/controls";
 import { useNow } from "../../hooks/useNow";
 import { fmtClock, fmtPrice, fmtSigned } from "../../game/format";
 import { ResultFlash } from "../../components/ResultFlash";
-import { CH, CW, GameHeader, PayLine, buildChart, useOpenRounds } from "./shared";
+import { CH, CW, GameHeader, PayLine, buildChart, useMainButton, useOpenRounds } from "./shared";
 
 export function MoonshotScreen() {
   const now = useNow(200);
@@ -12,13 +12,12 @@ export function MoonshotScreen() {
   const trail = useGame((s) => s.trail[s.asset]);
   const aim = useGame((s) => s.aim);
   const pendingDir = useGame((s) => s.pendingDir);
-  const placing = useGame((s) => s.placing);
-  const balance = useGame((s) => s.balance);
   const stake = useGame((s) => s.stake);
   const setAim = useGame((s) => s.setAim);
   const setPending = useGame((s) => s.setPending);
-  const fire = useGame((s) => s.fire);
   const error = useGame((s) => s.error);
+
+  const { spec: main } = useMainButton("moonshot", "FIRE", "OPENING");
 
   useControls(
     {
@@ -43,15 +42,9 @@ export function MoonshotScreen() {
         active: pendingDir === "DOWN",
         onPress: () => setPending("DOWN"),
       },
-      main: {
-        label: placing ? "OPENING" : "FIRE",
-        color: "amber",
-        loading: placing,
-        disabled: stake > balance,
-        onPress: () => void fire(),
-      },
+      main,
     },
-    [aim, pendingDir, placing, balance, stake],
+    [aim, pendingDir, main.label, main.loading, main.disabled],
   );
 
   const open = useOpenRounds("moonshot");

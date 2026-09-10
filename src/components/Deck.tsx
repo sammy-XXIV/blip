@@ -1,7 +1,10 @@
+import { useRef, useState } from "react";
 import { useGame } from "../game/store";
 import { useControlBus, type BtnSpec } from "../game/controls";
 import { sfx } from "../lib/sound";
 import { Knob } from "./Knob";
+
+const HOLD_MS = 420;
 
 const buzz = (p: number | number[]) => {
   if (navigator.vibrate) navigator.vibrate(p);
@@ -25,6 +28,55 @@ function Pad({ spec, fallback }: { spec: BtnSpec | null | undefined; fallback: s
   );
 }
 
+/** the orange button — FIRE is press-and-hold ("hold to the buzzer"); CASH OUT is a tap */
+function ActionButton({ spec }: { spec: BtnSpec }) {
+  const off = spec.disabled || spec.loading;
+  const hold = !spec.pulse && !spec.loading; // FIRE-style commit needs a hold
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [arming, setArming] = useState(false);
+
+  const commit = () => {
+    buzz([10, 30, 10]);
+    sfx("fire");
+    spec.onPress();
+  };
+  const cancel = () => {
+    if (timer.current) clearTimeout(timer.current);
+    timer.current = null;
+    setArming(false);
+  };
+  const start = () => {
+    if (off) return;
+    if (!hold) {
+      buzz(8);
+      sfx("tick");
+      spec.onPress();
+      return;
+    }
+    setArming(true);
+    buzz(4);
+    timer.current = setTimeout(() => {
+      setArming(false);
+      commit();
+    }, HOLD_MS);
+  };
+
+  return (
+    <button
+      className={`act ${spec.pulse ? "pulse" : ""} ${spec.loading ? "loading" : ""} ${arming ? "arming" : ""}`}
+      style={arming ? { ["--hold" as string]: `${HOLD_MS}ms` } : undefined}
+      disabled={off}
+      onPointerDown={start}
+      onPointerUp={cancel}
+      onPointerLeave={cancel}
+      onPointerCancel={cancel}
+    >
+      <span className="act-fill" aria-hidden />
+      <span className="act-lbl">{spec.loading ? "···" : arming ? "HOLD" : spec.label}</span>
+    </button>
+  );
+}
+
 export function Deck() {
   const screen = useGame((s) => s.screen);
   const goHome = useGame((s) => s.goHome);
@@ -39,7 +91,7 @@ export function Deck() {
   const idle = screen === "boot";
   const inPlay = screen === "play";
 
-  const m = main ?? { label: "—", onPress: () => {}, disabled: true };
+  const m: BtnSpec = main ?? { label: "—", onPress: () => {}, disabled: true };
 
   return (
     <div className={`deck ${idle ? "deck-idle" : ""}`}>
@@ -49,18 +101,7 @@ export function Deck() {
       </div>
 
       <div className="deck-right">
-        <button
-          className={`act ${m.pulse ? "pulse" : ""} ${m.loading ? "loading" : ""}`}
-          disabled={m.disabled || m.loading}
-          onClick={() => {
-            if (m.disabled || m.loading) return;
-            buzz([8, 24, 8]);
-            sfx("fire");
-            m.onPress();
-          }}
-        >
-          {m.loading ? "···" : m.label}
-        </button>
+        <ActionButton spec={m} />
         <Knob spec={knob ?? null} />
       </div>
 

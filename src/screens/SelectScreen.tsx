@@ -1,7 +1,7 @@
 import { useGame } from "../game/store";
 import { useControls } from "../game/controls";
 import { GAMES } from "../game/config";
-import { fmtUsd } from "../game/format";
+import { Rolling } from "../components/Rolling";
 import { sfx } from "../lib/sound";
 
 export function SelectScreen() {
@@ -41,7 +41,8 @@ export function SelectScreen() {
       <div className="scr-top">
         <span className="scr-asset">SELECT GAME</span>
         <span className="scr-meta mono">
-          AVAIL <b>${fmtUsd(balance, 0)}</b> · STK {streak}
+          AVAIL <Rolling value={balance} prefix="$" decimals={0} className="scr-bal-roll" /> · STK{" "}
+          {streak}
         </span>
       </div>
 

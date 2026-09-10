@@ -11,17 +11,50 @@ export interface GameDef {
   blurb: string;
   /** which DreamDEX market this game trades */
   market: "updown" | "strike";
+  howto: string[];
 }
 
 export const GAMES: GameDef[] = [
-  { id: "call", no: "01", name: "CALL", blurb: "Up or down. Sixty seconds.", market: "updown" },
-  { id: "lucky", no: "02", name: "LUCKY", blurb: "One tap. We pick the side.", market: "updown" },
+  {
+    id: "call",
+    no: "01",
+    name: "CALL",
+    blurb: "Up or down. Sixty seconds.",
+    market: "updown",
+    howto: [
+      "Set ▲ UP or ▼ DOWN with the pads.",
+      "Turn the knob for your stake.",
+      "Hold the orange button to fire.",
+      "Win if the 60s market closes your way.",
+      "Cash out any time before the buzzer.",
+    ],
+  },
+  {
+    id: "lucky",
+    no: "02",
+    name: "LUCKY",
+    blurb: "One tap. We pick the side.",
+    market: "updown",
+    howto: [
+      "No calling — the console flips the coin.",
+      "Set your stake, hold to SPIN.",
+      "Same 60s up/down market as CALL.",
+      "Streak still counts. Cash out still works.",
+    ],
+  },
   {
     id: "moonshot",
     no: "03",
     name: "MOONSHOT",
     blurb: "Clear the line, not just the direction.",
     market: "strike",
+    howto: [
+      "▲ LONG / ▼ SHORT with the pads.",
+      "Knob is AIM — higher x sets the line further out.",
+      "You must clear the line, not just be on the right side.",
+      "Trades a real fixed-strike market on DreamDEX.",
+      "Bigger reach, bigger payout.",
+    ],
   },
 ];
 

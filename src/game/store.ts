@@ -20,11 +20,19 @@ export type Screen = "boot" | "select" | "play";
 
 export interface ResultToast {
   roundId: string;
-  status: "WON" | "LOST" | "VOID";
+  status: "WON" | "LOST" | "VOID" | "CASHED";
   asset: Asset;
   delta: number; // net change to balance from this round
   streak: number;
 }
+
+const fxOn = (() => {
+  try {
+    return localStorage.getItem("blip.fx") !== "0";
+  } catch {
+    return true;
+  }
+})();
 
 interface GameState {
   screen: Screen;
@@ -48,8 +56,11 @@ interface GameState {
   bestStreak: number;
   result: ResultToast | null;
   placing: boolean;
+  cashing: boolean;
   error: string | null;
   menuOpen: boolean;
+  howtoOpen: boolean;
+  screenFx: boolean;
 
   boot: () => void;
   enterSelect: () => void;
@@ -59,6 +70,8 @@ interface GameState {
   goHome: () => void;
   openMenu: () => void;
   closeMenu: () => void;
+  toggleHowto: () => void;
+  toggleScreenFx: () => void;
   setAsset: (a: Asset) => void;
   cycleAsset: (dir: 1 | -1) => void;
   setPending: (d: Direction) => void;
@@ -68,6 +81,8 @@ interface GameState {
   nudgeStake: (dollars: number) => void;
   /** fire the current game with the pending choice */
   fire: () => Promise<void>;
+  /** exit the open round for the current game early */
+  cashOut: () => Promise<void>;
   clearResult: () => void;
   clearError: () => void;
 }
@@ -95,8 +110,11 @@ export const useGame = create<GameState>((set, get) => ({
   bestStreak: 0,
   result: null,
   placing: false,
+  cashing: false,
   error: null,
   menuOpen: false,
+  howtoOpen: false,
+  screenFx: fxOn,
 
   boot: () => {
     if (get().booted) return;
@@ -131,7 +149,11 @@ export const useGame = create<GameState>((set, get) => ({
             else if (r.status === "LOST") streak = 0;
             best = Math.max(best, streak);
             const delta =
-              r.status === "WON" ? r.payout - r.stake : r.status === "VOID" ? 0 : -r.stake;
+              r.status === "WON" || r.status === "CASHED"
+                ? r.payout - r.stake
+                : r.status === "VOID"
+                  ? 0
+                  : -r.stake;
             toast = {
               roundId: r.id,
               status: r.status as ResultToast["status"],
@@ -164,6 +186,17 @@ export const useGame = create<GameState>((set, get) => ({
 
   openMenu: () => set({ menuOpen: true }),
   closeMenu: () => set({ menuOpen: false }),
+  toggleHowto: () => set((s) => ({ howtoOpen: !s.howtoOpen })),
+  toggleScreenFx: () =>
+    set((s) => {
+      const next = !s.screenFx;
+      try {
+        localStorage.setItem("blip.fx", next ? "1" : "0");
+      } catch {
+        /* ignore */
+      }
+      return { screenFx: next };
+    }),
 
   setAsset: (asset) => set({ asset }),
 
@@ -211,6 +244,23 @@ export const useGame = create<GameState>((set, get) => ({
       set({ error: e instanceof Error ? e.message : "Could not place round" });
     } finally {
       set({ placing: false });
+    }
+  },
+
+  cashOut: async () => {
+    const s = get();
+    if (s.cashing) return;
+    const lead = s.rounds.find(
+      (r) => r.status === "OPEN" && r.game === s.game && r.asset === s.asset,
+    );
+    if (!lead) return;
+    set({ cashing: true, error: null });
+    try {
+      await markets().cashOut(lead.id);
+    } catch (e) {
+      set({ error: e instanceof Error ? e.message : "Could not cash out" });
+    } finally {
+      set({ cashing: false });
     }
   },
 

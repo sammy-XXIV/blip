@@ -114,6 +114,39 @@ async function main() {
   }
   log(`held     ${Number(held) / 1e6} tokens  cost ${Number(cost) / 1e6}  => ${(Number(held) / Number(cost)).toFixed(2)}x`);
 
+  // --- CASH OUT path: sell the held tokens back to the book mid-round ---
+  if (process.argv[6] === "cash") {
+    log("\nholding 8s, then cashing out on-chain...");
+    await new Promise((r) => setTimeout(r, 8000));
+    const sellSide = outcomeIdx === 0 ? "SELL_YES" : "SELL_NO";
+    let proceeds = 0n;
+    let sold = 0n;
+    for (let a = 0; a < 3 && sold === 0n; a++) {
+      if (a) await new Promise((r) => setTimeout(r, 1200));
+      try {
+        const sr = await ex.trader.placeOrder({
+          pool: mo.pool,
+          side: sellSide,
+          price: probabilityToPrice(0.01),
+          quantity: held,
+          orderType: 2,
+        });
+        for (const f of sr.fills ?? []) {
+          sold += BigInt(f.quantityFilled);
+          proceeds += (BigInt(f.quantityFilled) * BigInt(f.fillPrice)) / ONE;
+          log(`  sell   ${Number(f.quantityFilled) / 1e6} @ ${Number(f.fillPrice) / 1e6}`);
+        }
+        log(`cashout  ${sr.hash}`);
+      } catch (e) {
+        if (!/no ?fill|ImmediateOrCancel/i.test(String(e?.message ?? e))) throw e;
+      }
+    }
+    if (sold === 0n) log("cashout  NO BID — nothing to cash into");
+    else log(`cashed   ${Number(proceeds) / 1e6} back for ${Number(held) / 1e6} tokens`);
+    log(`\ntUSDC    ${formatUnits(await usdc(), 6)}`);
+    process.exit(0);
+  }
+
   // wait for on-chain resolution
   log("\nwaiting for the market to resolve on-chain...");
   let cur = mo;

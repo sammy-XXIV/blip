@@ -220,6 +220,47 @@ export class LiveMarkets implements MarketsAdapter {
     return round;
   }
 
+  /** Real on-chain exit: sell the held outcome tokens back to the book (IOC). */
+  async cashOut(roundId: string): Promise<void> {
+    const r = this.rounds.find((x) => x.id === roundId);
+    if (!r || r.status !== "OPEN") throw new Error("Nothing to cash out");
+
+    const mo = await this.ex.client.getMarketOnchain(r.marketId);
+    if (mo.finalized || mo.status !== 1) throw new Error("Too late — the round is settling");
+
+    const sellSide = r.outcomeIdx === 0 ? "SELL_YES" : "SELL_NO";
+    const heldRaw = BigInt(r.heldRaw);
+    let proceedsRaw = 0n;
+    let soldRaw = 0n;
+    for (let attempt = 0; attempt < 3 && soldRaw === 0n; attempt++) {
+      if (attempt) await new Promise((res) => setTimeout(res, 1200));
+      try {
+        const res = await this.ex.trader.placeOrder({
+          pool: r.pool,
+          side: sellSide,
+          price: probabilityToPrice(0.01), // floor — take whatever bid exists
+          quantity: heldRaw,
+          orderType: 2, // IOC
+        });
+        for (const f of res.fills ?? []) {
+          soldRaw += BigInt(f.quantityFilled);
+          proceedsRaw += (BigInt(f.quantityFilled) * BigInt(f.fillPrice)) / ONE;
+        }
+      } catch (e) {
+        if (!/no ?fill|ImmediateOrCancel/i.test(String((e as Error)?.message ?? e))) throw e;
+      }
+    }
+    if (soldRaw === 0n) throw new Error("No bid to cash out into — ride it to the buzzer");
+
+    r.status = "CASHED";
+    r.settlePrice = this.prices[r.asset];
+    r.payout = Math.round((Number(proceedsRaw) / Number(ONE)) * 100) / 100;
+    r.redeemed = true; // nothing left to redeem
+    this.persist();
+    this.emitRounds();
+    void this.pollBalance();
+  }
+
   // --- internals -----------------------------------------------------
 
   /** best live market for this asset / window / kind, plus its strike (0 = up/down) */

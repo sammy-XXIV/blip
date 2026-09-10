@@ -1,5 +1,6 @@
 import { useGame } from "../../game/store";
-import { fmtUsd } from "../../game/format";
+import { Rolling } from "../../components/Rolling";
+import type { BtnSpec } from "../../game/controls";
 import type { Round } from "../../lib/markets";
 
 export const CW = 300;
@@ -10,6 +11,7 @@ export function GameHeader({ title }: { title: string }) {
   const balance = useGame((s) => s.balance);
   const streak = useGame((s) => s.streak);
   const cycleAsset = useGame((s) => s.cycleAsset);
+  const toggleHowto = useGame((s) => s.toggleHowto);
 
   return (
     <div className="scr-top">
@@ -17,7 +19,11 @@ export function GameHeader({ title }: { title: string }) {
         {title} · {asset} <span aria-hidden>▾</span>
       </button>
       <span className="scr-meta mono">
-        AVAIL <b>${fmtUsd(balance, 0)}</b> · STK {streak}
+        AVAIL <Rolling value={balance} prefix="$" decimals={0} className="scr-bal-roll" /> · STK{" "}
+        {streak}
+        <button className="scr-help" onClick={toggleHowto} aria-label="how to play">
+          ?
+        </button>
       </span>
     </div>
   );
@@ -26,8 +32,10 @@ export function GameHeader({ title }: { title: string }) {
 export function PayLine({ stake, mult }: { stake: number; mult: number }) {
   return (
     <div className="scr-pays mono">
-      PAYS ${fmtUsd(stake, 0)} <span aria-hidden>→</span>{" "}
-      <b>${fmtUsd(stake * mult, 0)}</b>
+      PAYS ${stake} <span aria-hidden>→</span>{" "}
+      <b>
+        <Rolling value={stake * mult} prefix="$" decimals={0} />
+      </b>
       <span className="scr-mult">{mult.toFixed(2)}×</span>
     </div>
   );
@@ -40,6 +48,38 @@ export function useOpenRounds(gameId: string) {
   return rounds
     .filter((r) => r.status === "OPEN" && r.asset === asset && r.game === gameId)
     .sort((a, b) => a.expiresAt - b.expiresAt);
+}
+
+/** the orange button spec: FIRE when idle, CASH OUT while a round is open */
+export function useMainButton(
+  gameId: string,
+  fireLabel: string,
+  openLabel: string,
+): { spec: BtnSpec; hasOpen: boolean } {
+  const placing = useGame((s) => s.placing);
+  const cashing = useGame((s) => s.cashing);
+  const stake = useGame((s) => s.stake);
+  const balance = useGame((s) => s.balance);
+  const fire = useGame((s) => s.fire);
+  const cashOut = useGame((s) => s.cashOut);
+  const hasOpen = useOpenRounds(gameId).length > 0;
+
+  const spec: BtnSpec = hasOpen
+    ? {
+        label: cashing ? "CASHING" : "CASH OUT",
+        color: "amber",
+        loading: cashing,
+        pulse: !cashing,
+        onPress: () => void cashOut(),
+      }
+    : {
+        label: placing ? openLabel : fireLabel,
+        color: "amber",
+        loading: placing,
+        disabled: stake > balance,
+        onPress: () => void fire(),
+      };
+  return { spec, hasOpen };
 }
 
 export function buildChart(trail: number[], marks: (number | undefined)[] = []) {

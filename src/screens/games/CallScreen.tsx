@@ -5,7 +5,7 @@ import { useNow } from "../../hooks/useNow";
 import { STAKE_MAX, STAKE_MIN, multiplierForStreak } from "../../game/config";
 import { fmtClock, fmtPrice, fmtSigned } from "../../game/format";
 import { ResultFlash } from "../../components/ResultFlash";
-import { CH, CW, GameHeader, PayLine, buildChart, useOpenRounds } from "./shared";
+import { CH, CW, GameHeader, PayLine, buildChart, useMainButton, useOpenRounds } from "./shared";
 
 export function CallScreen() {
   const now = useNow(200);
@@ -15,12 +15,11 @@ export function CallScreen() {
   const stake = useGame((s) => s.stake);
   const streak = useGame((s) => s.streak);
   const pendingDir = useGame((s) => s.pendingDir);
-  const placing = useGame((s) => s.placing);
-  const balance = useGame((s) => s.balance);
   const setPending = useGame((s) => s.setPending);
   const setStake = useGame((s) => s.setStake);
-  const fire = useGame((s) => s.fire);
   const error = useGame((s) => s.error);
+
+  const { spec: main } = useMainButton("call", "FIRE", "OPENING");
 
   useControls(
     {
@@ -45,15 +44,9 @@ export function CallScreen() {
         active: pendingDir === "DOWN",
         onPress: () => setPending("DOWN"),
       },
-      main: {
-        label: placing ? "OPENING" : "FIRE",
-        color: "amber",
-        loading: placing,
-        disabled: stake > balance,
-        onPress: () => void fire(),
-      },
+      main,
     },
-    [stake, pendingDir, placing, balance],
+    [stake, pendingDir, main.label, main.loading, main.disabled],
   );
 
   const open = useOpenRounds("call");
