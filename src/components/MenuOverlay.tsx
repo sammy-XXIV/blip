@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { CURRENT_MODE, setMode } from "../lib/markets";
 import { rotateBurner } from "../lib/wallet";
+import { LogoutRow, PRIVY_ENABLED } from "../lib/privy";
 import { isMuted, toggleMute } from "../lib/sound";
 import { useBurnerFunds } from "../hooks/useBurnerFunds";
 import { useGame } from "../game/store";
@@ -98,15 +99,9 @@ export function MenuOverlay() {
 
 function LiveMenu() {
   const f = useBurnerFunds(6000);
-  const short = `${f.address.slice(0, 6)}…${f.address.slice(-4)}`;
+  const short = f.address ? `${f.address.slice(0, 6)}…${f.address.slice(-4)}` : "…";
   const copy = () => {
-    navigator.clipboard?.writeText(f.address).catch(() => {});
-  };
-  const newWallet = () => {
-    if (confirm("New play wallet? The current one and its testnet funds are abandoned.")) {
-      rotateBurner();
-      location.reload();
-    }
+    if (f.address) navigator.clipboard?.writeText(f.address).catch(() => {});
   };
 
   return (
@@ -123,12 +118,31 @@ function LiveMenu() {
           {f.usdc.toFixed(2)} tUSDC · {f.gas.toFixed(3)} STT
         </span>
       </div>
-      <div className="menu-row">
-        <span className="label">Reset</span>
-        <button className="menu-btn danger" onClick={newWallet}>
-          NEW WALLET
-        </button>
-      </div>
+      {PRIVY_ENABLED && LogoutRow ? (
+        <Suspense fallback={null}>
+          <LogoutRow />
+        </Suspense>
+      ) : (
+        <BurnerReset />
+      )}
     </>
   );
 }
+
+function BurnerReset() {
+  const go = () => {
+    if (confirm("New play wallet? The current one and its testnet funds are abandoned.")) {
+      rotateBurner();
+      location.reload();
+    }
+  };
+  return (
+    <div className="menu-row">
+      <span className="label">Reset</span>
+      <button className="menu-btn danger" onClick={go}>
+        NEW WALLET
+      </button>
+    </div>
+  );
+}
+

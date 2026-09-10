@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { IS_DEMO, markets } from "../lib/markets";
+import { LoginFlow, PRIVY_ENABLED } from "../lib/privy";
 import { useGame } from "../game/store";
 import { useBurnerFunds } from "../hooks/useBurnerFunds";
 import { sfx } from "../lib/sound";
@@ -8,7 +9,16 @@ export function BootScreen() {
   const enter = useGame((s) => s.enterSelect);
   const ready = useGame((s) => s.prices.BTC > 0);
 
-  if (!IS_DEMO) return <LiveBoot onStart={enter} priceReady={ready} />;
+  if (!IS_DEMO) {
+    if (PRIVY_ENABLED && LoginFlow) {
+      return (
+        <Suspense fallback={<div className="scr scr-boot"><span className="boot-press">…</span></div>}>
+          <LoginFlow FundGate={() => <FundGate onStart={enter} priceReady={ready} />} />
+        </Suspense>
+      );
+    }
+    return <FundGate onStart={enter} priceReady={ready} />;
+  }
 
   return (
     <div className="scr scr-boot">
@@ -20,7 +30,14 @@ export function BootScreen() {
         Win the call, ride the streak.
       </p>
 
-      <button className="boot-start" onClick={() => { sfx("start"); enter(); }} disabled={!ready}>
+      <button
+        className="boot-start"
+        onClick={() => {
+          sfx("start");
+          enter();
+        }}
+        disabled={!ready}
+      >
         START
       </button>
 
@@ -33,14 +50,17 @@ export function BootScreen() {
   );
 }
 
-function LiveBoot({ onStart, priceReady }: { onStart: () => void; priceReady: boolean }) {
+
+/** address + faucet + START — shared by both the burner and Privy flows */
+function FundGate({ onStart, priceReady }: { onStart: () => void; priceReady: boolean }) {
   const funds = useBurnerFunds();
   const [minting, setMinting] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
-  const short = `${funds.address.slice(0, 6)}…${funds.address.slice(-4)}`;
+  const addr = funds.address ?? "0x…";
+  const short = `${addr.slice(0, 6)}…${addr.slice(-4)}`;
   const copy = () => {
-    navigator.clipboard?.writeText(funds.address).catch(() => {});
+    if (funds.address) navigator.clipboard?.writeText(funds.address).catch(() => {});
   };
   const getUsdc = async () => {
     setMinting(true);
@@ -61,7 +81,14 @@ function LiveBoot({ onStart, priceReady }: { onStart: () => void; priceReady: bo
         <span className="boot-press">{priceReady ? "PRESS START" : "TUNING IN…"}</span>
         <h1 className="boot-head">Play wallet funded.</h1>
         <p className="boot-sub">Every call signs itself — no wallet popups. Just tap and go.</p>
-        <button className="boot-start" onClick={() => { sfx("start"); onStart(); }} disabled={!priceReady}>
+        <button
+          className="boot-start"
+          onClick={() => {
+            sfx("start");
+            onStart();
+          }}
+          disabled={!priceReady}
+        >
           START
         </button>
         <div className="boot-foot">
@@ -77,9 +104,7 @@ function LiveBoot({ onStart, priceReady }: { onStart: () => void; priceReady: bo
   return (
     <div className="scr scr-boot">
       <span className="boot-press">FUND PLAY WALLET</span>
-      <p className="boot-sub">
-        One-time top-up. After this, every trade signs itself — no wallet popups.
-      </p>
+      <p className="boot-sub">One-time top-up. After this, every trade signs itself — no popups.</p>
 
       <button className="fund-addr mono" onClick={copy} title="copy address">
         {short} ⧉

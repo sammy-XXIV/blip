@@ -1,56 +1,65 @@
-import { createPublicClient, formatEther, formatUnits, http } from "viem";
+import { createPublicClient, erc20Abi, formatEther, formatUnits, http, keccak256 } from "viem";
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
-import { erc20Abi } from "viem";
 import { CHAIN, COLLATERAL, COLLATERAL_DECIMALS, RPC_HTTP } from "./somnia";
 
 const KEY_STORAGE = "blip.burner.pk.v1";
 
 type Hex = `0x${string}`;
 
-function loadOrCreateKey(): Hex {
+/** true when a Privy app id is configured — then the play key comes from a
+ *  login signature rather than being auto-generated. */
+export const PRIVY_MODE = !!import.meta.env.VITE_PRIVY_APP_ID;
+
+/** message the Privy wallet signs once to derive a deterministic play key */
+export const PLAY_WALLET_MESSAGE = "BLIP play wallet · v1";
+
+const isHexKey = (s: unknown): s is Hex => typeof s === "string" && /^0x[0-9a-fA-F]{64}$/.test(s);
+
+function readKey(): Hex | null {
   try {
-    const existing = localStorage.getItem(KEY_STORAGE);
-    if (existing && /^0x[0-9a-fA-F]{64}$/.test(existing)) return existing as Hex;
+    const k = localStorage.getItem(KEY_STORAGE);
+    return isHexKey(k) ? k : null;
   } catch {
-    /* ignore */
+    return null;
   }
-  const pk = generatePrivateKey();
+}
+function writeKey(pk: Hex) {
   try {
     localStorage.setItem(KEY_STORAGE, pk);
   } catch {
-    /* ignore — session-only burner */
+    /* session only */
   }
-  return pk;
+}
+function forgetKey() {
+  try {
+    localStorage.removeItem(KEY_STORAGE);
+  } catch {
+    /* ignore */
+  }
 }
 
+/** deterministic play key from a Privy login signature */
+export const deriveKeyFromSignature = (sig: Hex): Hex => keccak256(sig);
+
 /**
- * A throwaway "play wallet" kept in the browser. Funded once from a faucet, then
- * signs every trade silently — no wallet popups. Testnet only.
+ * A "play wallet" — a raw keypair the browser holds so trades sign silently
+ * (no popups). In Privy mode it's derived deterministically from a login
+ * signature (recoverable, cross-device). Otherwise it's auto-generated.
+ * Testnet only.
  */
 export class Burner {
   readonly privateKey: Hex;
   readonly address: Hex;
   private pub = createPublicClient({ chain: CHAIN, transport: http(RPC_HTTP) });
 
-  constructor() {
-    this.privateKey = loadOrCreateKey();
-    this.address = privateKeyToAccount(this.privateKey).address;
-  }
-
-  /** wipe the key and mint a fresh burner (used by MENU → reset) */
-  static rotate(): Burner {
-    try {
-      localStorage.removeItem(KEY_STORAGE);
-    } catch {
-      /* ignore */
-    }
-    return new Burner();
+  constructor(key: Hex) {
+    this.privateKey = key;
+    this.address = privateKeyToAccount(key).address;
   }
 
   async gasBalanceWei(): Promise<bigint> {
     return this.pub.getBalance({ address: this.address });
   }
-
   async collateralBalanceRaw(): Promise<bigint> {
     return this.pub.readContract({
       address: COLLATERAL,
@@ -59,7 +68,6 @@ export class Burner {
       args: [this.address],
     });
   }
-
   async funds(): Promise<{ gas: number; usdc: number; gasWei: bigint; usdcRaw: bigint }> {
     const [gasWei, usdcRaw] = await Promise.all([
       this.gasBalanceWei(),
@@ -75,11 +83,41 @@ export class Burner {
 }
 
 let instance: Burner | null = null;
+
+/** is a play wallet available right now? (always true outside Privy mode) */
+export function burnerReady(): boolean {
+  return !!instance || !!readKey() || !PRIVY_MODE;
+}
+
+/** the play wallet — throws in Privy mode until a key has been authorized */
 export function burner(): Burner {
-  if (!instance) instance = new Burner();
+  if (instance) return instance;
+  let key = readKey();
+  if (!key) {
+    if (PRIVY_MODE) throw new Error("Sign in to create your play wallet");
+    key = generatePrivateKey();
+    writeKey(key);
+  }
+  instance = new Burner(key);
   return instance;
 }
-export function rotateBurner(): Burner {
-  instance = Burner.rotate();
+
+/** set the play key (from a Privy login signature) and cache it */
+export function setBurnerKey(pk: Hex): Burner {
+  writeKey(pk);
+  instance = new Burner(pk);
   return instance;
+}
+
+/** drop the cached play wallet (logout / reset) */
+export function clearBurner() {
+  forgetKey();
+  instance = null;
+}
+
+/** non-Privy mode only: wipe and regenerate */
+export function rotateBurner(): Burner {
+  forgetKey();
+  instance = null;
+  return burner();
 }

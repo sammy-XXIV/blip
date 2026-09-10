@@ -1,5 +1,5 @@
 import { SomniaMarkets, probabilityToPrice } from "@somnia-chain/markets-sdk";
-import { burner } from "../wallet";
+import { burner, burnerReady } from "../wallet";
 import { ADDRESSES, CHAIN, INDEXER_URL, ONE, PRICE_FEED, WS_RPC } from "../somnia";
 import type {
   Asset,
@@ -53,16 +53,35 @@ export class LiveMarkets implements MarketsAdapter {
   private roundSubs = new Set<(r: Round[]) => void>();
 
   private timers: ReturnType<typeof setInterval>[] = [];
+  private signerReady = false;
 
   constructor() {
+    // reads work without a signer; the play key is attached once available
     this.ex = new SomniaMarkets({
       chain: CHAIN,
       addresses: ADDRESSES,
       wsRpcUrl: WS_RPC,
       indexerUrl: INDEXER_URL,
       priceFeed: PRICE_FEED,
-      privateKey: burner().privateKey,
     });
+    if (burnerReady()) {
+      try {
+        this.useKey(burner().privateKey);
+      } catch {
+        /* Privy mode, not authorized yet */
+      }
+    }
+  }
+
+  /** attach the play wallet's key (from cache or a Privy login signature) */
+  useKey(pk: Hex) {
+    this.ex.setSigner({ privateKey: pk });
+    this.signerReady = true;
+    void this.pollBalance();
+  }
+
+  private requireSigner() {
+    if (!this.signerReady) throw new Error("Sign in to your play wallet first");
   }
 
   // --- lifecycle ---------------------------------------------------------
@@ -117,6 +136,7 @@ export class LiveMarkets implements MarketsAdapter {
   }
 
   async faucet() {
+    this.requireSigner();
     await this.ex.trader.faucet();
     await this.pollBalance();
   }
@@ -124,6 +144,7 @@ export class LiveMarkets implements MarketsAdapter {
   // --- write: place a round -------------------------------------------
 
   async placeRound(input: PlaceRoundInput): Promise<Round> {
+    this.requireSigner();
     const { game, market, asset, direction, stake, windowSec } = input;
     const entryPrice = this.prices[asset];
     if (!entryPrice) throw new Error("No price yet — hold on");
@@ -222,6 +243,7 @@ export class LiveMarkets implements MarketsAdapter {
 
   /** Real on-chain exit: sell the held outcome tokens back to the book (IOC). */
   async cashOut(roundId: string): Promise<void> {
+    this.requireSigner();
     const r = this.rounds.find((x) => x.id === roundId);
     if (!r || r.status !== "OPEN") throw new Error("Nothing to cash out");
 

@@ -11,7 +11,9 @@
     "deploy": "npm run build && wrangler pages deploy dist"
   },
   "dependencies": {
+    "@privy-io/react-auth": "^3.42.0",
     "@somnia-chain/markets-sdk": "^0.29.0",
+    "@stripe/stripe-js": "^7.10.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "viem": "^2.56.3",
