@@ -40,17 +40,17 @@ export interface PlaceRoundInput {
   stake: number;
   windowSec: number;
   multiplier: number;
-  /** MOONSHOT: target multiplier — scales how far the strike sits (demo only) */
+  /** MOONSHOT: target multiplier — picks which fixed-strike market to take */
   aim?: number;
 }
 
 /**
- * The only surface the game talks to. `demo` fakes everything locally;
- * `live` will wrap @somnia-chain/markets-sdk (mintSet -> placeOrder -> redeem,
- * see _ref/typescript/src). Swapped by VITE_DEMO_MODE.
+ * The only surface the game talks to. Backed entirely by
+ * @somnia-chain/markets-sdk — real prices (client.fetchPrice), real orders
+ * (placeOrder -> redeem), real settlement on DreamDEX Event Contracts.
  */
 export interface MarketsAdapter {
-  readonly mode: "demo" | "live";
+  readonly mode: "live";
   readonly assets: Asset[];
 
   /** latest known price, if any */

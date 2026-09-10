@@ -1,5 +1,4 @@
 import { Suspense, useState } from "react";
-import { CURRENT_MODE, setMode } from "../lib/markets";
 import { rotateBurner } from "../lib/wallet";
 import { LogoutRow, PRIVY_ENABLED } from "../lib/privy";
 import { isMuted, toggleMute } from "../lib/sound";
@@ -10,17 +9,7 @@ export function MenuOverlay() {
   const close = useGame((s) => s.closeMenu);
   const screenFx = useGame((s) => s.screenFx);
   const toggleScreenFx = useGame((s) => s.toggleScreenFx);
-  const live = CURRENT_MODE === "live";
   const [muted, setMuted] = useState(isMuted());
-
-  const resetDemo = () => {
-    try {
-      localStorage.removeItem("blip.demo.v1");
-    } catch {
-      /* ignore */
-    }
-    location.reload();
-  };
 
   return (
     <div className="menu" role="dialog" aria-label="menu">
@@ -29,18 +18,6 @@ export function MenuOverlay() {
         <button className="menu-x" onClick={close} aria-label="close">
           ✕
         </button>
-      </div>
-
-      <div className="menu-row">
-        <span className="label">Mode</span>
-        <div className="menu-seg">
-          <button className={`menu-opt ${!live ? "on" : ""}`} onClick={() => setMode("demo")}>
-            DEMO
-          </button>
-          <button className={`menu-opt ${live ? "on" : ""}`} onClick={() => setMode("live")}>
-            LIVE
-          </button>
-        </div>
       </div>
 
       <div className="menu-row">
@@ -79,19 +56,10 @@ export function MenuOverlay() {
         </div>
       </div>
 
-      {live ? <LiveMenu /> : (
-        <div className="menu-row">
-          <span className="label">Play money</span>
-          <button className="menu-btn" onClick={resetDemo}>
-            RESET BALANCE
-          </button>
-        </div>
-      )}
+      <LiveMenu />
 
       <p className="menu-note mono">
-        {live
-          ? "Live · Somnia Shannon · every call is a real DreamDEX Event Contract."
-          : "Demo · play money · no wallet. Flip to LIVE for real on-chain rounds."}
+        Live · Somnia Shannon · every call is a real DreamDEX Event Contract.
       </p>
     </div>
   );
@@ -145,4 +113,3 @@ function BurnerReset() {
     </div>
   );
 }
-

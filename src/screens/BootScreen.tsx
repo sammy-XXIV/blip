@@ -1,15 +1,13 @@
-import { IS_DEMO } from "../lib/markets";
 import { useGame } from "../game/store";
 import { sfx } from "../lib/sound";
 
 export function BootScreen() {
-  const enterSelect = useGame((s) => s.enterSelect);
   const enterAuth = useGame((s) => s.enterAuth);
   const ready = useGame((s) => s.prices.BTC > 0);
 
   const start = () => {
     sfx("start");
-    IS_DEMO ? enterSelect() : enterAuth();
+    enterAuth();
   };
 
   return (
@@ -27,9 +25,7 @@ export function BootScreen() {
       </button>
 
       <div className="boot-foot">
-        <span className="label">
-          {IS_DEMO ? "Demo · play money · no wallet" : "Live · Somnia Shannon · play money"}
-        </span>
+        <span className="label">Live · Somnia Shannon · real DreamDEX prices</span>
         <span className="label">Powered by DreamDEX Event Contracts</span>
         <span className="boot-warn mono">BLIP has no token.</span>
       </div>
