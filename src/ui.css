@@ -294,11 +294,6 @@
   justify-content: space-between;
   gap: 8px;
 }
-.scr-top-left {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
 .scr-asset {
   font-family: var(--font-mono);
   font-size: 12px;
@@ -306,19 +301,6 @@
   letter-spacing: 0.12em;
   color: var(--scr-blue);
   text-transform: uppercase;
-}
-.scr-swap {
-  font-size: 9px;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  color: var(--scr-blue-bright);
-  background: #ffffff0d;
-  border: 1px solid var(--line);
-  border-radius: 5px;
-  padding: 2px 6px;
-}
-.scr-swap:active {
-  background: #ffffff1a;
 }
 .scr-meta {
   font-size: 10px;
@@ -736,6 +718,9 @@
   transform: translateY(3px);
   box-shadow: inset 0 1px 0 #33322c;
 }
+.hwbtn-help {
+  padding: 7px 11px;
+}
 .hwchip {
   margin-left: auto;
   padding: 5px 12px;
@@ -899,6 +884,9 @@
 .sw-rotor.idle {
   animation: sw-idle 24s linear infinite;
 }
+.sw-rotor.spinning {
+  animation: sw-idle 0.55s linear infinite;
+}
 @keyframes sw-idle {
   to {
     transform: rotate(360deg);
@@ -916,10 +904,9 @@
 }
 .wedge-lbl {
   fill: var(--scr-white);
-  font-size: 6px;
+  font-size: 11px;
   font-weight: 700;
-  font-family: var(--font-mono, monospace);
-  opacity: 0.85;
+  opacity: 0.9;
 }
 .sw-hub {
   fill: #0a1826;
@@ -1038,22 +1025,6 @@
   font-weight: 700;
   font-size: 12px;
   color: var(--scr-blue-bright);
-}
-.scr-help {
-  margin-left: 8px;
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  border: 1px solid var(--line-bright);
-  color: var(--scr-blue-dim);
-  font-size: 10px;
-  font-weight: 700;
-  line-height: 1;
-  vertical-align: middle;
-}
-.scr-help:active {
-  color: var(--scr-blue);
-  border-color: var(--scr-blue);
 }
 
 /* HOW-TO overlay */

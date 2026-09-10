@@ -1,4 +1,3 @@
-import type { CSSProperties } from "react";
 import { useGame } from "../../game/store";
 import { useControls } from "../../game/controls";
 import { useNow } from "../../hooks/useNow";
@@ -69,11 +68,12 @@ export function LuckyScreen() {
   const landK = lead ? (lead.direction === "UP" ? 0 : 1) : 0;
   const landedDeg = 2160 + (360 - (landK * (360 / WEDGES) + 360 / WEDGES / 2));
 
-  const wheelStyle: CSSProperties | undefined = lead
+  // fast continuous spin while a round is placing; snap-decelerate onto the
+  // drawn side once it's known; slow idle drift otherwise
+  const rotorClass = lead ? "" : placing ? "spinning" : "idle";
+  const wheelStyle = lead
     ? { transform: `rotate(${landedDeg}deg)`, transition: "transform 1.7s cubic-bezier(.12,.8,.15,1)" }
-    : placing
-      ? { transform: "rotate(2160deg)", transition: "transform 2.6s linear" }
-      : undefined;
+    : undefined;
 
   return (
     <div className="scr scr-game g-lucky">
@@ -85,7 +85,7 @@ export function LuckyScreen() {
             <path d="M10 13 L2 1 L18 1 Z" />
           </svg>
           <svg className="spinwheel" viewBox="0 0 100 100" aria-hidden>
-            <g className={`sw-rotor ${!lead && !placing ? "idle" : ""}`} style={wheelStyle}>
+            <g className={`sw-rotor ${rotorClass}`} style={wheelStyle}>
               {Array.from({ length: WEDGES }, (_, k) => (
                 <path key={k} d={wedgePath(k)} className={`wedge ${k % 2 ? "down" : "up"}`} />
               ))}
@@ -93,7 +93,7 @@ export function LuckyScreen() {
                 const { x, y } = labelPos(k);
                 return (
                   <text key={k} x={x} y={y} className="wedge-lbl" textAnchor="middle" dominantBaseline="central">
-                    {mult.toFixed(1)}×
+                    {k % 2 ? "▼" : "▲"}
                   </text>
                 );
               })}

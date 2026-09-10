@@ -49,6 +49,9 @@ export function Deck() {
   const goHome = useGame((s) => s.goHome);
   const backToSelect = useGame((s) => s.backToSelect);
   const openMenu = useGame((s) => s.openMenu);
+  const asset = useGame((s) => s.asset);
+  const cycleAsset = useGame((s) => s.cycleAsset);
+  const toggleHowto = useGame((s) => s.toggleHowto);
 
   const knob = useControlBus((s) => s.knob);
   const action1 = useControlBus((s) => s.action1);
@@ -93,6 +96,31 @@ export function Deck() {
         >
           {inPlay ? "BACK" : "HOME"}
         </button>
+        {inPlay && (
+          <button
+            className="hwbtn"
+            onClick={() => {
+              buzz(6);
+              sfx("tick");
+              cycleAsset(1);
+            }}
+          >
+            {asset}
+          </button>
+        )}
+        {inPlay && (
+          <button
+            className="hwbtn hwbtn-help"
+            onClick={() => {
+              buzz(6);
+              sfx("tick");
+              toggleHowto();
+            }}
+            aria-label="how to play"
+          >
+            ?
+          </button>
+        )}
         <span className="hwchip mono">
           {knob ? (knob.format ? knob.format(knob.value) : knob.value) : "—"}
         </span>
