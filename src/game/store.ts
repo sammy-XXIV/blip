@@ -1,22 +1,22 @@
 import { create } from "zustand";
-import { IS_DEMO, markets, type Asset, type Direction, type Round } from "../lib/markets";
+import { markets, type Asset, type Direction, type Round } from "../lib/markets";
 import {
-  DEMO_WINDOWS,
-  LIVE_WINDOWS,
+  GAMES,
+  MOONSHOT_MULTIPLIER,
+  gameById,
   multiplierForStreak,
   STAKE_DEFAULT,
   STAKE_MAX,
   STAKE_MIN,
+  WINDOW_SEC,
+  type GameId,
 } from "./config";
 
 const clamp = (n: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, n));
 
-const WINDOWS = IS_DEMO ? DEMO_WINDOWS : LIVE_WINDOWS;
-const DEFAULT_WINDOW = WINDOWS[IS_DEMO ? 1 : 0].sec; // demo: 60s · live: 1H
-
 const TRAIL_LEN = 160;
 
-export type Screen = "boot" | "console";
+export type Screen = "boot" | "select" | "play";
 
 export interface ResultToast {
   roundId: string;
@@ -30,8 +30,11 @@ interface GameState {
   screen: Screen;
   booted: boolean;
 
+  game: GameId;
+  selectIdx: number;
+  pendingDir: Direction;
+
   asset: Asset;
-  windowSec: number;
   stake: number;
 
   balance: number;
@@ -47,16 +50,20 @@ interface GameState {
   menuOpen: boolean;
 
   boot: () => void;
-  enterConsole: () => void;
+  enterSelect: () => void;
+  moveSelect: (dir: 1 | -1) => void;
+  pickGame: () => void;
+  backToSelect: () => void;
   goHome: () => void;
   openMenu: () => void;
   closeMenu: () => void;
   setAsset: (a: Asset) => void;
   cycleAsset: (dir: 1 | -1) => void;
-  cycleWindow: (dir: 1 | -1) => void;
+  setPending: (d: Direction) => void;
   /** nudge the stake by whole dollars (one scroll unit = 1) */
   nudgeStake: (dollars: number) => void;
-  call: (d: Direction) => Promise<void>;
+  /** fire the current game with the pending choice */
+  fire: () => Promise<void>;
   clearResult: () => void;
   clearError: () => void;
 }
@@ -67,8 +74,11 @@ export const useGame = create<GameState>((set, get) => ({
   screen: "boot",
   booted: false,
 
+  game: "call",
+  selectIdx: 0,
+  pendingDir: "UP",
+
   asset: "BTC",
-  windowSec: DEFAULT_WINDOW,
   stake: STAKE_DEFAULT,
 
   balance: 0,
@@ -101,7 +111,6 @@ export const useGame = create<GameState>((set, get) => ({
     m.subscribeBalance((balance) => set({ balance }));
 
     m.subscribeRounds((rounds) => {
-      // score any freshly settled rounds oldest-first
       const settled = [...rounds]
         .filter((r) => r.status !== "OPEN" && !scored.has(r.id))
         .sort((a, b) => a.expiresAt - b.expiresAt);
@@ -135,7 +144,15 @@ export const useGame = create<GameState>((set, get) => ({
     set({ booted: true });
   },
 
-  enterConsole: () => set({ screen: "console" }),
+  enterSelect: () => set({ screen: "select", menuOpen: false }),
+
+  moveSelect: (dir) =>
+    set((s) => ({ selectIdx: (s.selectIdx + dir + GAMES.length) % GAMES.length })),
+
+  pickGame: () =>
+    set((s) => ({ screen: "play", game: GAMES[s.selectIdx].id, pendingDir: "UP", error: null })),
+
+  backToSelect: () => set({ screen: "select", menuOpen: false }),
 
   goHome: () => set({ screen: "boot", menuOpen: false }),
 
@@ -152,31 +169,34 @@ export const useGame = create<GameState>((set, get) => ({
       return { asset: list[next] };
     }),
 
-  cycleWindow: (dir) =>
-    set((s) => {
-      const i = WINDOWS.findIndex((w) => w.sec === s.windowSec);
-      const next = (i + dir + WINDOWS.length) % WINDOWS.length;
-      return { windowSec: WINDOWS[next].sec };
-    }),
+  setPending: (d) => set({ pendingDir: d }),
 
   nudgeStake: (dollars) =>
     set((s) => ({ stake: clamp(Math.round(s.stake + dollars), STAKE_MIN, STAKE_MAX) })),
 
-  call: async (direction) => {
+  fire: async () => {
     const s = get();
     if (s.placing) return;
     if (s.stake > s.balance) {
       set({ error: "Not enough balance for that stake" });
       return;
     }
+    const g = gameById(s.game);
+    const direction: Direction =
+      s.game === "lucky" ? (Math.random() < 0.5 ? "UP" : "DOWN") : s.pendingDir;
+    const multiplier =
+      s.game === "moonshot" ? MOONSHOT_MULTIPLIER : multiplierForStreak(s.streak);
+
     set({ placing: true, error: null });
     try {
       await markets().placeRound({
+        game: s.game,
+        market: g.market,
         asset: s.asset,
         direction,
         stake: s.stake,
-        windowSec: s.windowSec,
-        multiplier: multiplierForStreak(s.streak),
+        windowSec: WINDOW_SEC,
+        multiplier,
       });
     } catch (e) {
       set({ error: e instanceof Error ? e.message : "Could not place round" });

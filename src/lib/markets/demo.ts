@@ -100,17 +100,26 @@ export class DemoMarkets implements MarketsAdapter {
   }
 
   async placeRound(input: PlaceRoundInput): Promise<Round> {
-    const { asset, direction, stake, windowSec, multiplier } = input;
+    const { game, market, asset, direction, stake, windowSec, multiplier } = input;
     if (stake <= 0) throw new Error("Stake must be positive");
     if (stake > this.balance) throw new Error("Insufficient demo balance");
 
     const now = Date.now();
+    const entryPrice = this.prices[asset];
+    // MOONSHOT: a strike ~0.15% away in the called direction — you must clear it.
+    const strikePrice =
+      market === "strike"
+        ? round0(entryPrice * (direction === "UP" ? 1.0015 : 0.9985))
+        : undefined;
+
     const round: Round = {
       id: `d${now.toString(36)}${(this.seq++).toString(36)}`,
+      game,
       asset,
       direction,
       stake,
-      entryPrice: this.prices[asset],
+      entryPrice,
+      strikePrice,
       payout: round0(stake * multiplier),
       multiplier,
       openedAt: now,
@@ -144,13 +153,20 @@ export class DemoMarkets implements MarketsAdapter {
       if (r.status !== "OPEN" || now < r.expiresAt) continue;
       const settle = this.prices[r.asset];
       r.settlePrice = settle;
-      const moved = settle - r.entryPrice;
-      if (moved === 0) {
+
+      let won: boolean | null;
+      if (r.strikePrice != null) {
+        // MOONSHOT — must clear the strike, not just be on the right side
+        won = r.direction === "UP" ? settle >= r.strikePrice : settle <= r.strikePrice;
+      } else {
+        const moved = settle - r.entryPrice;
+        won = moved === 0 ? null : (r.direction === "UP") === moved > 0;
+      }
+
+      if (won === null) {
         r.status = "VOID";
         this.setBalance(this.balance + r.stake);
       } else {
-        const up = moved > 0;
-        const won = (r.direction === "UP") === up;
         r.status = won ? "WON" : "LOST";
         if (won) this.setBalance(this.balance + r.payout);
       }

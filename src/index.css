@@ -6,15 +6,15 @@
   --casing-lo: #030302;     /* bevel shadow */
   --plate: #1e1e1c;         /* brand plate / raised panels */
 
-  --screen: #0a0803;        /* warm-black screen glass */
-  --screen-edge: #241a08;   /* screen inner bezel */
-  --panel: #17140d;         /* inset panels on screen */
-  --line: #322913;
-  --line-bright: #4a3c1c;
+  --screen: #070b12;        /* cool near-black screen glass */
+  --screen-edge: #0e1a2e;   /* screen inner bezel */
+  --panel: #0c1521;         /* inset panels on screen */
+  --line: #22303f;
+  --line-bright: #35485c;
 
-  --ink: #ffe9c7;           /* warm phosphor white */
-  --ink-dim: #b98b4e;
-  --ink-faint: #6f562f;
+  --ink: #dfe9f4;           /* cool phosphor white */
+  --ink-dim: #8ba3bd;
+  --ink-faint: #4a6079;
 
   --amber: #ff9d1e;         /* PRIMARY orange */
   --amber-bright: #ffc061;

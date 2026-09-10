@@ -4,7 +4,7 @@ import { useGame } from "../game/store";
 import { useBurnerFunds } from "../hooks/useBurnerFunds";
 
 export function BootScreen() {
-  const enter = useGame((s) => s.enterConsole);
+  const enter = useGame((s) => s.enterSelect);
   const ready = useGame((s) => s.prices.BTC > 0);
 
   if (!IS_DEMO) return <LiveBoot onStart={enter} priceReady={ready} />;
@@ -14,9 +14,9 @@ export function BootScreen() {
       <span className="boot-press">{ready ? "PRESS START" : "TUNING IN…"}</span>
       <h1 className="boot-head">Built for fun and money.</h1>
       <p className="boot-sub">
-        Call the next move before it lands.
+        Call BTC or ETH up or down. Sixty seconds to land it.
         <br />
-        Fun enough you forget it's trading.
+        Win the call, ride the streak.
       </p>
 
       <button className="boot-start" onClick={enter} disabled={!ready}>
@@ -24,9 +24,9 @@ export function BootScreen() {
       </button>
 
       <div className="boot-foot">
-        <span className="label">Demo build · play money · no wallet</span>
+        <span className="label">Demo · play money · no wallet</span>
         <span className="label">Powered by DreamDEX Event Contracts</span>
-        <span className="boot-warn mono">BLIP has no token. Any coin claiming to be BLIP is a scam.</span>
+        <span className="boot-warn mono">BLIP has no token.</span>
       </div>
     </div>
   );
@@ -58,8 +58,8 @@ function LiveBoot({ onStart, priceReady }: { onStart: () => void; priceReady: bo
     return (
       <div className="scr scr-boot">
         <span className="boot-press">{priceReady ? "PRESS START" : "TUNING IN…"}</span>
-        <h1 className="boot-head">Built for fun and money.</h1>
-        <p className="boot-sub">Play wallet funded — every call signs itself, no popups.</p>
+        <h1 className="boot-head">Play wallet funded.</h1>
+        <p className="boot-sub">Every call signs itself — no wallet popups. Just tap and go.</p>
         <button className="boot-start" onClick={onStart} disabled={!priceReady}>
           START
         </button>

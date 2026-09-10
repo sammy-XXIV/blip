@@ -1,24 +1,34 @@
-export interface Window {
-  sec: number;
-  label: string;
+/** Blip is a one-cadence game: every round is a 60-second call. */
+export const WINDOW_SEC = 60;
+export const WINDOW_LABEL = "60S";
+
+export type GameId = "call" | "lucky" | "moonshot";
+
+export interface GameDef {
+  id: GameId;
+  no: string;
+  name: string;
+  blurb: string;
+  /** which DreamDEX market this game trades */
+  market: "updown" | "strike";
 }
 
-/** demo mode: fast arcade windows */
-export const DEMO_WINDOWS: Window[] = [
-  { sec: 30, label: "30S" },
-  { sec: 60, label: "60S" },
-  { sec: 120, label: "2M" },
+export const GAMES: GameDef[] = [
+  { id: "call", no: "01", name: "CALL", blurb: "Up or down. Sixty seconds.", market: "updown" },
+  { id: "lucky", no: "02", name: "LUCKY", blurb: "One tap. We pick the side.", market: "updown" },
+  {
+    id: "moonshot",
+    no: "03",
+    name: "MOONSHOT",
+    blurb: "Clear the line, not just the direction.",
+    market: "strike",
+  },
 ];
 
-/** live mode: the real DreamDEX Event Contract cadences on Shannon */
-export const LIVE_WINDOWS: Window[] = [
-  { sec: 3600, label: "1H" },
-  { sec: 14400, label: "4H" },
-  { sec: 86400, label: "1D" },
-];
+export const gameById = (id: GameId) => GAMES.find((g) => g.id === id)!;
 
-/** every window across modes — for label lookups that don't care which mode */
-export const ALL_WINDOWS: Window[] = [...DEMO_WINDOWS, ...LIVE_WINDOWS];
+/** MOONSHOT has to pass a strike, not just be on the right side — pays more. */
+export const MOONSHOT_MULTIPLIER = 2.4;
 
 /** stake is a free $ amount, scrolled one dollar at a time */
 export const STAKE_MIN = 1;

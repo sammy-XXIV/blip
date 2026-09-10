@@ -1,6 +1,9 @@
 export type Asset = "BTC" | "ETH";
 export type Direction = "UP" | "DOWN";
 export type RoundStatus = "OPEN" | "WON" | "LOST" | "VOID";
+export type GameId = "call" | "lucky" | "moonshot";
+/** which DreamDEX binary market the round trades */
+export type MarketKind = "updown" | "strike";
 
 export interface Quote {
   asset: Asset;
@@ -11,11 +14,14 @@ export interface Quote {
 
 export interface Round {
   id: string;
+  game: GameId;
   asset: Asset;
   direction: Direction;
   /** stake in collateral units (tUSDC = USD) */
   stake: number;
   entryPrice: number;
+  /** MOONSHOT only — the strike the market resolves against */
+  strikePrice?: number;
   settlePrice?: number;
   /** total returned to the player on a win, stake included */
   payout: number;
@@ -27,6 +33,8 @@ export interface Round {
 }
 
 export interface PlaceRoundInput {
+  game: GameId;
+  market: MarketKind;
   asset: Asset;
   direction: Direction;
   stake: number;

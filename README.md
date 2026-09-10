@@ -13,11 +13,13 @@ Built for the **Somnia × DreamDEX Event Contracts Hackathon**.
 
 ## Two modes
 
+Every round is a **60-second call** — one cadence, no menus.
+
 | | **Demo** | **Live** |
 |---|---|---|
 | Wallet | none | browser-local "play wallet" (burner) |
 | Money | play money | testnet tUSDC on Somnia Shannon |
-| Rounds | 30s / 60s / 2m, simulated price | real DreamDEX Event Contracts — 1H / 4H / 1D |
+| Rounds | 60s, simulated price | 60s, real DreamDEX Event Contract markets |
 | Settlement | instant, local | on-chain; winners **auto-redeemed** |
 
 Demo is the arcade experience and the UX showcase. Live proves it's real:
@@ -34,7 +36,7 @@ Switch modes in-game: **MENU → DEMO / LIVE**.
    browser (`localStorage`). You fund it once from the Somnia faucet + the SDK's
    `trader.faucet()` (test tUSDC). After that every trade signs itself — **no
    wallet popups** — so the game stays tap-and-go.
-2. **Call.** Blip discovers the live binary market for the asset/window
+2. **Call.** Blip discovers the live 60-second binary market for the asset
    (`client.listLiveBinaryMarkets`), gates on its on-chain status
    (`getMarketOnchain`), then `mintSet`s your stake into Up + Down tokens and
    crosses the book toward your called side (`placeOrder`, IOC).
@@ -43,13 +45,12 @@ Switch modes in-game: **MENU → DEMO / LIVE**.
    winning side** — you never have to claim.
 4. Open positions survive a refresh (persisted locally by `marketId`).
 
-### Why not 30-second rounds on-chain?
+### One cadence: 60 seconds
 
-DreamDEX's minimum series cadence is **60 seconds**
-(`MIN_SERIES_INTERVAL_SEC = 60`), and the live BTC/ETH markets on Shannon today
-run hourly. So live mode plays the real cadences (1H / 4H / 1D) with hands-free
-auto-settlement, and the sub-minute arcade loop lives in demo mode. Running a
-custom 60s series (Blip as market creator) is the natural next step.
+DreamDEX's minimum series cadence is 60 seconds (`MIN_SERIES_INTERVAL_SEC = 60`),
+and Shannon runs live 60s BTC/ETH series. That's Blip's whole game — a single
+one-minute cadence in both modes, so there's nothing to configure. Sub-60s isn't
+possible on the protocol.
 
 ---
 
