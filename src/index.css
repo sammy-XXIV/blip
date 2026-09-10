@@ -80,12 +80,6 @@ body {
   background:
     /* soft focus glow on the device */
     radial-gradient(680px 520px at 50% 38%, rgba(90, 168, 240, 0.12), transparent 70%),
-    /* coarse blueprint grid */
-    repeating-linear-gradient(0deg, rgba(90, 150, 220, 0.05) 0 1px, transparent 1px 88px),
-    repeating-linear-gradient(90deg, rgba(90, 150, 220, 0.05) 0 1px, transparent 1px 88px),
-    /* fine grid */
-    repeating-linear-gradient(0deg, rgba(90, 150, 220, 0.028) 0 1px, transparent 1px 22px),
-    repeating-linear-gradient(90deg, rgba(90, 150, 220, 0.028) 0 1px, transparent 1px 22px),
     /* deep blue → black gradient wash */
     radial-gradient(120% 90% at 50% 0%, rgba(38, 96, 168, 0.28), transparent 60%),
     linear-gradient(165deg, #0c2340 0%, #0a1a30 32%, #06101f 58%, #04070f 80%, #020409 100%);
