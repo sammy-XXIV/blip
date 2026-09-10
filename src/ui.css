@@ -294,6 +294,11 @@
   justify-content: space-between;
   gap: 8px;
 }
+.scr-top-left {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
 .scr-asset {
   font-family: var(--font-mono);
   font-size: 12px;
@@ -301,6 +306,19 @@
   letter-spacing: 0.12em;
   color: var(--scr-blue);
   text-transform: uppercase;
+}
+.scr-swap {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--scr-blue-bright);
+  background: #ffffff0d;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  padding: 2px 6px;
+}
+.scr-swap:active {
+  background: #ffffff1a;
 }
 .scr-meta {
   font-size: 10px;

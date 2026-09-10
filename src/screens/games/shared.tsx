@@ -13,11 +13,18 @@ export function GameHeader({ title }: { title: string }) {
   const cycleAsset = useGame((s) => s.cycleAsset);
   const toggleHowto = useGame((s) => s.toggleHowto);
 
+  const other = asset === "BTC" ? "ETH" : "BTC";
+
   return (
     <div className="scr-top">
-      <button className="scr-asset" onClick={() => cycleAsset(1)}>
-        {title} · {asset} <span aria-hidden>▾</span>
-      </button>
+      <span className="scr-top-left">
+        <span className="scr-asset">
+          {title} · {asset}
+        </span>
+        <button className="scr-swap mono" onClick={() => cycleAsset(1)} aria-label={`switch to ${other}`}>
+          ⇄ {other}
+        </button>
+      </span>
       <span className="scr-meta mono">
         AVAIL <Rolling value={balance} prefix="$" decimals={0} className="scr-bal-roll" /> · STK{" "}
         {streak}
